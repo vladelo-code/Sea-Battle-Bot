@@ -45,6 +45,10 @@
 8. 💥 Наслаждайтесь яркими эффектами попаданий и промахов!  
 9. 🏆 Победите, уничтожив все корабли противника!
 
+<img src="Example-photo1.png" width="600" style="display: block; margin: auto;">
+
+<img src="Example-photo2.png" width="600" style="display: block; margin: auto;">
+
 ---
 
 ### 🎯 Технологии
