@@ -1,2 +1,5 @@
 aiogram
+asyncio
 python-dotenv
+random
+os
