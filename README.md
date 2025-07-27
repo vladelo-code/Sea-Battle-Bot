@@ -1,3 +1,11 @@
+# Sea-Battle-Bot
+
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![Aiogram](https://img.shields.io/badge/Aiogram-3.x-blueviolet?logo=telegram)
+![Asyncio](https://img.shields.io/badge/Asyncio-native-lightgrey)
+![dotenv](https://img.shields.io/badge/python--dotenv-env-green?logo=python)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)
+
 # **Sea-Battle-Bot** 🌊
 
 **Sea-Battle-Bot** — это увлекательный Telegram-бот для игры в классический **морской бой** между двумя игроками! 💥  
