@@ -6,6 +6,9 @@ from game_logic import print_board, process_shot, check_victory
 from keyboards import main_menu, connect_menu, playing_menu, current_game_menu
 from logger import setup_logger
 
+from app.db_utils import create_match, update_match_result
+from app.dependencies import get_db
+
 # Инициализация логгера
 logger = setup_logger(__name__)
 
@@ -70,6 +73,14 @@ async def join_game_command(message: types.Message):
                 game = get_game(game_id)
                 if game:
                     if join_game(game_id, user_id):
+                        # Создаем матч в БД при присоединении второго игрока
+                        db_gen = get_db()
+                        db = next(db_gen)
+                        try:
+                            create_match(db, game_id, game["player1"], user_id)
+                        finally:
+                            db_gen.close()
+
                         game = get_game(game_id)
                         player1 = game["player1"]
                         player2 = game["player2"]
@@ -104,6 +115,15 @@ async def shot_command_coord(message: types.Message):
     if message.text == "🏳️ Сдаться":
         logger.info(f'🏳️ Игрок @{message.from_user.username} сдался, ID игры: {game_id}')
         opponent_id = game["player1"] if game["turn"] == game["player2"] else game["player2"]
+
+        # Обновляем результат матча в БД: победитель — противник, результат — surrender
+        db_gen = get_db()
+        db = next(db_gen)
+        try:
+            update_match_result(db, game_id, winner_id=opponent_id, result="surrender")
+        finally:
+            db_gen.close()
+
         del current_games[message.from_user.id]
         del current_games[opponent_id]
 
@@ -123,6 +143,14 @@ async def shot_command_coord(message: types.Message):
 
                 # Проверка на победу после выстрела
                 if check_victory(board):
+                    # Обновляем результат матча в БД: победитель — current user, результат — normal
+                    db_gen = get_db()
+                    db = next(db_gen)
+                    try:
+                        update_match_result(db, game_id, winner_id=message.from_user.id, result="normal")
+                    finally:
+                        db_gen.close()
+
                     del current_games[message.from_user.id]
                     del current_games[opponent_id]
                     winner = message.from_user.username
