@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from app.handlers import register_handlers
 from app.logger import setup_logger
 
-from config import BOT_TOKEN
+from app.config import BOT_TOKEN
 
 # Инициализация логгера
 logger = setup_logger("bot")
