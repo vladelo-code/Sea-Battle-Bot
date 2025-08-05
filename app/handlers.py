@@ -217,5 +217,6 @@ def register_handlers(dp: Dispatcher):
     dp.message.register(shot_command_coord, lambda message: message.text in coordinates)
 
     # Вызываем функцию подключения к игре по фразе '📎 Присоединиться к игре'
-    dp.message.register(process_game_id, lambda message: message.text == "📎 Присоединиться к игре")
+    dp.message.register(process_game_id, lambda
+        message: message.text == "📎 Присоединиться к игре" or message.text == "🔃 Обновить список игр")
     dp.message.register(join_game_command)

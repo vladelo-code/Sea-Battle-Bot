@@ -46,7 +46,9 @@ def playing_menu(game_id, player_id):
 def current_game_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=f"{game}") for game in games]
+            [KeyboardButton(text=f"{game}") for game in games],
+            [KeyboardButton(text="🚀 Новая игра")],
+            [KeyboardButton(text="🔃 Обновить список игр")]
         ],
         resize_keyboard=True
     )
