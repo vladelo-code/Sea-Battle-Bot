@@ -10,4 +10,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
-CMD ["python", "app/bot.py"]
+CMD alembic upgrade head && python app/bot.py
