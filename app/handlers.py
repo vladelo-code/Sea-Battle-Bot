@@ -206,8 +206,9 @@ async def shot_command_coord(message: types.Message):
 
 
 def register_handlers(dp: Dispatcher):
-    # Вызываем функцию приветствия по команде /start
+    # Вызываем функцию приветствия по команде /start или '🏠 Главное меню'
     dp.message.register(start_command, Command("start"))
+    dp.message.register(start_command, lambda message: message.text == "🏠 Главное меню")
 
     # Вызываем функцию создания новой игры по фразе '🚀 Новая игра'
     dp.message.register(create_game_command, lambda message: message.text == "🚀 Новая игра")
@@ -216,7 +217,7 @@ def register_handlers(dp: Dispatcher):
     dp.message.register(shot_command_coord, lambda message: message.text == "🏳️ Сдаться")
     dp.message.register(shot_command_coord, lambda message: message.text in coordinates)
 
-    # Вызываем функцию подключения к игре по фразе '📎 Присоединиться к игре'
+    # Вызываем функцию подключения к игре по фразе '📎 Присоединиться к игре' или '🔃 Обновить список игр'
     dp.message.register(process_game_id, lambda
         message: message.text == "📎 Присоединиться к игре" or message.text == "🔃 Обновить список игр")
     dp.message.register(join_game_command)
