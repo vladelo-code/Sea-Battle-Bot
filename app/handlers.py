@@ -6,7 +6,9 @@ from game_logic import print_board, process_shot, check_victory
 from keyboards import main_menu, connect_menu, playing_menu, current_game_menu
 from logger import setup_logger
 
-from app.db_utils import create_match, update_match_result
+from app.db_utils.match import create_match, update_match_result
+from app.db_utils.stats import update_stats_after_match
+from app.db_utils.player import get_or_create_player  # ⬅️ добавили
 from app.dependencies import get_db
 
 # Инициализация логгера
@@ -34,6 +36,15 @@ current_games = {}
 # Функция для обработки команды /start
 async def start_command(message: types.Message):
     logger.info(f'👋 Игрок @{message.from_user.username} запустил бота!')
+
+    # Регистрируем или обновляем игрока
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        get_or_create_player(db, telegram_id=str(message.from_user.id), username=message.from_user.username)
+    finally:
+        db_gen.close()
+
     await message.answer(
         f'👋 Привет! Добро пожаловать в Морской бой!\n\nСоздай новую игру и приглашай друга или присоединяйся к уже созданной игре, удачи! 🚢\n\nРазработчик: @vladelo',
         reply_markup=main_menu())
@@ -77,6 +88,10 @@ async def join_game_command(message: types.Message):
                         db_gen = get_db()
                         db = next(db_gen)
                         try:
+                            # Обновляем или создаем игроков
+                            get_or_create_player(db, telegram_id=str(game["player1"]))
+                            get_or_create_player(db, telegram_id=str(user_id), username=message.from_user.username)
+
                             create_match(db, game_id, game["player1"], user_id)
                         finally:
                             db_gen.close()
@@ -121,6 +136,7 @@ async def shot_command_coord(message: types.Message):
         db = next(db_gen)
         try:
             update_match_result(db, game_id, winner_id=opponent_id, result="surrender")
+            update_stats_after_match(db, winner_id=opponent_id, loser_id=message.from_user.id)
         finally:
             db_gen.close()
 
@@ -148,6 +164,7 @@ async def shot_command_coord(message: types.Message):
                     db = next(db_gen)
                     try:
                         update_match_result(db, game_id, winner_id=message.from_user.id, result="normal")
+                        update_stats_after_match(db, winner_id=message.from_user.id, loser_id=opponent_id)
                     finally:
                         db_gen.close()
 
