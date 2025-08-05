@@ -7,7 +7,7 @@ from keyboards import main_menu, connect_menu, playing_menu, current_game_menu
 from logger import setup_logger
 
 from app.db_utils.match import create_match, update_match_result
-from app.db_utils.stats import update_stats_after_match, get_stats
+from app.db_utils.stats import update_stats_after_match, get_stats, get_top_players
 from app.db_utils.player import get_or_create_player, get_player_by_telegram_id
 from app.dependencies import get_db
 
@@ -90,6 +90,26 @@ async def stats_command(message: types.Message):
             )
         else:
             await message.answer("🤔 У вас пока нет статистики. Сыграйте первую игру!")
+    finally:
+        db_gen.close()
+
+
+async def leaderboard_command(message: types.Message):
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        top_players = get_top_players(db)
+
+        if not top_players:
+            await message.answer("😔 Рейтинг пока пуст.")
+            return
+
+        text = "🥇 Топ игроков по рейтингу:\n\n"
+        for i, (username, rating) in enumerate(top_players, 1):
+            name = f"@{username}" if username else "Без имени"
+            text += f"{i}. {name} — {rating} 🏆\n"
+
+        await message.answer(text)
     finally:
         db_gen.close()
 
@@ -239,6 +259,9 @@ def register_handlers(dp: Dispatcher):
 
     # Вызываем функцию получения статистики '👤 Мой профиль'
     dp.message.register(stats_command, lambda message: message.text == "👤 Мой профиль")
+
+    # Вызываем функцию получения статистики '🥇 Рейтинг'
+    dp.message.register(leaderboard_command, lambda message: message.text == "🥇 Рейтинг")
 
     # Вызываем функцию хода (выстрела) по фразе введенным координатам или сдаемся
     dp.message.register(shot_command_coord, lambda message: message.text == "🏳️ Сдаться")

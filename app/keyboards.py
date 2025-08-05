@@ -9,7 +9,7 @@ def main_menu():
             [KeyboardButton(text="🚀 Новая игра")],
             [KeyboardButton(text="📎 Присоединиться к игре")],
             [KeyboardButton(text="👤 Мой профиль")],
-            [KeyboardButton(text="🏆 Рейтинг")]
+            [KeyboardButton(text="🥇 Рейтинг")]
         ],
         resize_keyboard=True
     )

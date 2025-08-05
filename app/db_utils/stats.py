@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.models.player_stats import PlayerStats
+from app.models.player import Player
+
 from app.rating_utils import calculate_elo
 
 
@@ -34,3 +36,14 @@ def update_stats_after_match(db: Session, winner_id: int, loser_id: int) -> None
 
 def get_stats(db: Session, player_id: int) -> PlayerStats | None:
     return db.query(PlayerStats).filter_by(player_id=player_id).first()
+
+
+def get_top_players(db: Session, limit: int = 10) -> list[tuple[str, int]]:
+    results = (
+        db.query(Player.username, PlayerStats.rating)
+        .join(PlayerStats, Player.telegram_id == PlayerStats.player_id)
+        .order_by(PlayerStats.rating.desc())
+        .limit(limit)
+        .all()
+    )
+    return results
