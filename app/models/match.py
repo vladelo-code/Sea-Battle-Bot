@@ -10,6 +10,8 @@ class Match(Base):
 
     id = Column(Integer, primary_key=True)
 
+    game_id = Column(String, unique=True, nullable=False)
+
     player_1_id = Column(Integer, ForeignKey("players.id"), nullable=False)
     player_2_id = Column(Integer, ForeignKey("players.id"), nullable=False)
 
@@ -17,7 +19,7 @@ class Match(Base):
     started_at = Column(DateTime, default=datetime.now)
     ended_at = Column(DateTime, nullable=True)
 
-    # Результат игры: surrender, timeout
+    # Результат игры: normal, surrender, timeout
     result = Column(String, nullable=True)
 
     player_1 = relationship("Player", foreign_keys=[player_1_id])
