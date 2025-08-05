@@ -1,10 +1,10 @@
 from aiogram import Dispatcher, types
 from aiogram.filters import Command
 
-from storage import create_game, join_game, get_game, get_board, switch_turn, get_turn, delete_game
-from game_logic import print_board, process_shot, check_victory
-from keyboards import main_menu, connect_menu, playing_menu, current_game_menu, rating_menu
-from logger import setup_logger
+from app.storage import create_game, join_game, get_game, get_board, switch_turn, get_turn, delete_game
+from app.game_logic import print_board, process_shot, check_victory
+from app.keyboards import main_menu, connect_menu, playing_menu, current_game_menu, rating_menu
+from app.logger import setup_logger
 
 from app.db_utils.match import create_match, update_match_result
 from app.db_utils.stats import update_stats_after_match, get_stats, get_top_players

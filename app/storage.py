@@ -1,5 +1,5 @@
-from game_logic import create_empty_board, place_all_ships
-from utils import generate_game_id
+from app.game_logic import create_empty_board, place_all_ships
+from app.utils import generate_game_id
 
 # Тут хранятся текущие игры
 games = {}

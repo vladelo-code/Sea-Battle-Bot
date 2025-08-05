@@ -1,7 +1,8 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from handlers import register_handlers
-from logger import setup_logger
+
+from app.handlers import register_handlers
+from app.logger import setup_logger
 
 from config import BOT_TOKEN
 

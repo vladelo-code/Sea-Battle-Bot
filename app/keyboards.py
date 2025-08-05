@@ -1,5 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from storage import games
+from app.storage import games
 
 
 # Клавиатура в главном меню
