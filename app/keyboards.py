@@ -57,3 +57,15 @@ def current_game_menu():
         resize_keyboard=True
     )
     return keyboard
+
+
+# Клавиатура в меню с рейтингом
+def rating_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="ℹ️ О рейтинге")],
+            [KeyboardButton(text="🏠 Главное меню")]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard

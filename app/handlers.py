@@ -3,7 +3,7 @@ from aiogram.filters import Command
 
 from storage import create_game, join_game, get_game, get_board, switch_turn, get_turn, delete_game
 from game_logic import print_board, process_shot, check_victory
-from keyboards import main_menu, connect_menu, playing_menu, current_game_menu
+from keyboards import main_menu, connect_menu, playing_menu, current_game_menu, rating_menu
 from logger import setup_logger
 
 from app.db_utils.match import create_match, update_match_result
@@ -35,7 +35,7 @@ current_games = {}
 
 # Функция для обработки команды /start
 async def start_command(message: types.Message):
-    logger.info(f'👋 Игрок @{message.from_user.username} запустил бота!')
+    logger.info(f'👋 Игрок @{message.from_user.username} запустил бота (главное меню)!')
 
     # Регистрируем или обновляем игрока
     db_gen = get_db()
@@ -46,8 +46,14 @@ async def start_command(message: types.Message):
         db_gen.close()
 
     await message.answer(
-        f'👋 Привет! Добро пожаловать в Морской бой!\n\nСоздай новую игру и приглашай друга или присоединяйся к уже созданной игре, удачи! 🚢\n\nРазработчик: @vladelo',
-        reply_markup=main_menu())
+        "👋 <b>Привет! Добро пожаловать в Морской бой!</b>\n\n"
+        "🚢 Создай новую игру и приглашай друга — или присоединяйся к уже созданной. Удачи в бою!\n\n"
+        "👨‍💻 <b>Разработчик:</b> @vladelo\n"
+        "🌐 <b>GitHub проекта:</b> <a href='https://github.com/vladelo777/Sea-Battle-Bot'>github.com</a>",
+        reply_markup=main_menu(),
+        parse_mode="HTML",
+        disable_web_page_preview=True
+    )
 
 
 # Функция для создания игры
@@ -76,11 +82,13 @@ async def stats_command(message: types.Message):
     try:
         player = get_player_by_telegram_id(db, str(message.from_user.id))
         if not player:
+            logger.info(f'🚀 Игрок @{message.from_user.username} пытался получить статистику, будучи не авторизованным.')
             await message.answer("❗ Вы ещё не зарегистрированы в системе.")
             return
 
         stats = get_stats(db, message.from_user.id)
         if stats:
+            logger.info(f'🚀 Игрок @{message.from_user.username} получил свою статистику.')
             await message.answer(
                 f"📊 Ваша статистика:\n\n"
                 f"🎮 Сыграно матчей: {stats.games_played}\n"
@@ -89,6 +97,7 @@ async def stats_command(message: types.Message):
                 f"📈 Рейтинг: {stats.rating}"
             )
         else:
+            logger.info(f'🚀 Игрок @{message.from_user.username} пытался получить статистику, ни разу не сыграв.')
             await message.answer("🤔 У вас пока нет статистики. Сыграйте первую игру!")
     finally:
         db_gen.close()
@@ -101,6 +110,7 @@ async def leaderboard_command(message: types.Message):
         top_players = get_top_players(db)
 
         if not top_players:
+            logger.info(f'🚀 Игрок @{message.from_user.username} пытался получить рейтинг, но он пуст.')
             await message.answer("😔 Рейтинг пока пуст.")
             return
 
@@ -109,9 +119,27 @@ async def leaderboard_command(message: types.Message):
             name = f"@{username}" if username else "Без имени"
             text += f"{i}. {name} — {rating} 🏆\n"
 
-        await message.answer(text)
+        logger.info(f'🚀 Игрок @{message.from_user.username} получил рейтинг игроков.')
+        await message.answer(text, reply_markup=rating_menu())
     finally:
         db_gen.close()
+
+
+async def get_elo_explanation(message: types.Message):
+    logger.info(f'🚀 Игрок @{message.from_user.username} посмотрел правила начисления рейтинга.')
+    await message.answer(
+        "📊 <b>Как считается рейтинг?</b>\n\n"
+        "Система основана на алгоритме <b>Elo</b> — популярной модели оценки навыков игроков.\n\n"
+        "☝🏻 <b>Основные принципы:</b>\n"
+        "• Стартовый рейтинг каждого игрока: <b>1000</b>.\n"
+        "• После каждой игры рейтинг <b>перерасчитывается</b>:\n"
+        "   • Победитель получает очки (больше — если противник сильнее).\n"
+        "   • Проигравший теряет очки (больше — если противник слабее).\n\n"
+        "📈 Рейтинг — это отражение твоей формы и уровня среди других игроков.\n\n"
+        "🔁 Пересчёт происходит <b>после каждой завершённой игры</b>.",
+        parse_mode="html",
+        reply_markup=main_menu()
+    )
 
 
 # Функция для подключения к игре
@@ -260,8 +288,11 @@ def register_handlers(dp: Dispatcher):
     # Вызываем функцию получения статистики '👤 Мой профиль'
     dp.message.register(stats_command, lambda message: message.text == "👤 Мой профиль")
 
-    # Вызываем функцию получения статистики '🥇 Рейтинг'
+    # Вызываем функцию получения рейтинга '🥇 Рейтинг'
     dp.message.register(leaderboard_command, lambda message: message.text == "🥇 Рейтинг")
+
+    # Вызываем функцию получения информации о рейтинге 'ℹ️ О рейтинге'
+    dp.message.register(get_elo_explanation, lambda message: message.text == "ℹ️ О рейтинге")
 
     # Вызываем функцию хода (выстрела) по фразе введенным координатам или сдаемся
     dp.message.register(shot_command_coord, lambda message: message.text == "🏳️ Сдаться")
