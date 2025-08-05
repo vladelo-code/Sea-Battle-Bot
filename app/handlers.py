@@ -7,8 +7,8 @@ from keyboards import main_menu, connect_menu, playing_menu, current_game_menu
 from logger import setup_logger
 
 from app.db_utils.match import create_match, update_match_result
-from app.db_utils.stats import update_stats_after_match
-from app.db_utils.player import get_or_create_player
+from app.db_utils.stats import update_stats_after_match, get_stats
+from app.db_utils.player import get_or_create_player, get_player_by_telegram_id
 from app.dependencies import get_db
 
 # Инициализация логгера
@@ -68,6 +68,30 @@ async def process_game_id(message: types.Message):
     user_game_requests[message.from_user.id] = None
     await message.answer("💬 Выберите и отправьте ID игры, к которой хотите присоединиться.",
                          reply_markup=current_game_menu())
+
+
+async def stats_command(message: types.Message):
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        player = get_player_by_telegram_id(db, str(message.from_user.id))
+        if not player:
+            await message.answer("❗ Вы ещё не зарегистрированы в системе.")
+            return
+
+        stats = get_stats(db, message.from_user.id)
+        if stats:
+            await message.answer(
+                f"📊 Ваша статистика:\n\n"
+                f"🎮 Сыграно матчей: {stats.games_played}\n"
+                f"🏆 Побед: {stats.wins}\n"
+                f"💥 Поражений: {stats.losses}\n"
+                f"📈 Рейтинг: {stats.rating}"
+            )
+        else:
+            await message.answer("🤔 У вас пока нет статистики. Сыграйте первую игру!")
+    finally:
+        db_gen.close()
 
 
 # Функция для подключения к игре
@@ -212,6 +236,9 @@ def register_handlers(dp: Dispatcher):
 
     # Вызываем функцию создания новой игры по фразе '🚀 Новая игра'
     dp.message.register(create_game_command, lambda message: message.text == "🚀 Новая игра")
+
+    # Вызываем функцию получения статистики '👤 Мой профиль'
+    dp.message.register(stats_command, lambda message: message.text == "👤 Мой профиль")
 
     # Вызываем функцию хода (выстрела) по фразе введенным координатам или сдаемся
     dp.message.register(shot_command_coord, lambda message: message.text == "🏳️ Сдаться")

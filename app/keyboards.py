@@ -7,7 +7,9 @@ def main_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🚀 Новая игра")],
-            [KeyboardButton(text="📎 Присоединиться к игре")]
+            [KeyboardButton(text="📎 Присоединиться к игре")],
+            [KeyboardButton(text="👤 Мой профиль")],
+            [KeyboardButton(text="🏆 Рейтинг")]
         ],
         resize_keyboard=True
     )
@@ -18,7 +20,8 @@ def main_menu():
 def connect_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📎 Присоединиться к игре")]
+            [KeyboardButton(text="📎 Присоединиться к игре")],
+            [KeyboardButton(text="🏠 Главное меню")]
         ],
         resize_keyboard=True
     )
@@ -48,7 +51,8 @@ def current_game_menu():
         keyboard=[
             [KeyboardButton(text=f"{game}") for game in games],
             [KeyboardButton(text="🚀 Новая игра")],
-            [KeyboardButton(text="🔃 Обновить список игр")]
+            [KeyboardButton(text="🔃 Обновить список игр")],
+            [KeyboardButton(text="🏠 Главное меню")]
         ],
         resize_keyboard=True
     )

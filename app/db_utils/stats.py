@@ -30,3 +30,7 @@ def update_stats_after_match(db: Session, winner_id: int, loser_id: int) -> None
     )
 
     db.commit()
+
+
+def get_stats(db: Session, player_id: int) -> PlayerStats | None:
+    return db.query(PlayerStats).filter_by(player_id=player_id).first()
