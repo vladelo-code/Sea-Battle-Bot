@@ -1,8 +1,13 @@
 from aiogram import Dispatcher, types
 from aiogram.filters import Command
+
 from storage import create_game, join_game, get_game, get_board, switch_turn, get_turn, delete_game
 from game_logic import print_board, process_shot, check_victory
 from keyboards import main_menu, connect_menu, playing_menu, current_game_menu
+from logger import setup_logger
+
+# Инициализация логгера
+logger = setup_logger(__name__)
 
 # Создаём глобальный словарь для хранения ID игры
 user_game_requests = {}
@@ -25,6 +30,7 @@ current_games = {}
 
 # Функция для обработки команды /start
 async def start_command(message: types.Message):
+    logger.info(f'👋 Игрок @{message.from_user.username} запустил бота!')
     await message.answer(
         f'👋 Привет! Добро пожаловать в Морской бой!\n\nСоздай новую игру и приглашай друга или присоединяйся к уже созданной игре, удачи! 🚢\n\nРазработчик: @vladelo',
         reply_markup=main_menu())
@@ -34,12 +40,12 @@ async def start_command(message: types.Message):
 async def create_game_command(message: types.Message):
     if message.from_user.id not in current_games:
         game_id = create_game(message.from_user.id)
-        print(f'🚀 Игрок @{message.from_user.username} запустил игру, ID игры: {game_id}')
+        logger.info(f'🚀 Игрок @{message.from_user.username} создал игру, ID игры: {game_id}')
         current_games[message.from_user.id] = game_id
         await message.answer(f"🛠 Игра создана! ID игры: {game_id}\n Ожидаем второго игрока.",
                              reply_markup=connect_menu())
     else:
-        print(f'🚀 Игрок @{message.from_user.username} пытался запустить ещё игру, не закончив предыдущую.')
+        print(f'🚀 Игрок @{message.from_user.username} пытался создать ещё игру, не закончив предыдущую.')
         await message.answer(f"❗ Прежде чем создать новую игру, доиграйте текущую или сдайтесь.")
 
 
@@ -56,7 +62,8 @@ async def join_game_command(message: types.Message):
         game_id = message.text
         user_id = message.from_user.id
         if user_id in current_games and current_games[user_id] == game_id:
-            print(f'❗ Пользователь @{message.from_user.username} пытался подключиться к своей же игре с ID: {game_id}')
+            logger.warning(
+                f'❗ Пользователь @{message.from_user.username} пытался подключиться к своей же игре с ID: {game_id}')
             await message.answer(f"❗ Нельзя подключаться к своей же игре.", reply_markup=current_game_menu())
         else:
             if user_id in user_game_requests and user_game_requests[user_id] is None:
@@ -66,7 +73,7 @@ async def join_game_command(message: types.Message):
                         game = get_game(game_id)
                         player1 = game["player1"]
                         player2 = game["player2"]
-                        print(f'➕ Игрок @{message.from_user.username} присоединился к игре, ID игры: {game_id}')
+                        logger.info(f'➕ Игрок @{message.from_user.username} присоединился к игре, ID игры: {game_id}')
                         current_games[message.from_user.id] = game_id
                         await message.answer(f"✅ Вы успешно присоединились к игре с ID: {game_id}!")
                         await message.bot.send_message(player1, f"🎮 Игра началась!\n1️⃣ Вы ходите первым!",
@@ -95,7 +102,7 @@ async def shot_command_coord(message: types.Message):
     game = get_game(game_id)
 
     if message.text == "🏳️ Сдаться":
-        print(f'🏳️ Игрок @{message.from_user.username} сдался, ID игры: {game_id}')
+        logger.info(f'🏳️ Игрок @{message.from_user.username} сдался, ID игры: {game_id}')
         opponent_id = game["player1"] if game["turn"] == game["player2"] else game["player2"]
         del current_games[message.from_user.id]
         del current_games[opponent_id]

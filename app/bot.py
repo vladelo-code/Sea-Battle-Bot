@@ -2,6 +2,10 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN
 from handlers import register_handlers
+from logger import setup_logger
+
+# Инициализация логгера
+logger = setup_logger("bot")
 
 # Инициализация бота и диспетчера
 bot = Bot(token=BOT_TOKEN)
@@ -12,7 +16,7 @@ register_handlers(dp)
 
 
 async def main():
-    print('✅ Sea-Battle-Bot запущен!')
+    logger.info("✅ Sea-Battle-Bot запущен!")
     await dp.start_polling(bot)
 
 
