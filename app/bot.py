@@ -1,8 +1,9 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from config import BOT_TOKEN
 from handlers import register_handlers
 from logger import setup_logger
+
+from config import BOT_TOKEN
 
 # Инициализация логгера
 logger = setup_logger("bot")
