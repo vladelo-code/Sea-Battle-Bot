@@ -8,7 +8,7 @@ from logger import setup_logger
 
 from app.db_utils.match import create_match, update_match_result
 from app.db_utils.stats import update_stats_after_match
-from app.db_utils.player import get_or_create_player  # ⬅️ добавили
+from app.db_utils.player import get_or_create_player
 from app.dependencies import get_db
 
 # Инициализация логгера
@@ -59,7 +59,7 @@ async def create_game_command(message: types.Message):
         await message.answer(f"🛠 Игра создана! ID игры: {game_id}\n Ожидаем второго игрока.",
                              reply_markup=connect_menu())
     else:
-        print(f'🚀 Игрок @{message.from_user.username} пытался создать ещё игру, не закончив предыдущую.')
+        logger.info(f'🚀 Игрок @{message.from_user.username} пытался создать ещё игру, не закончив предыдущую.')
         await message.answer(f"❗ Прежде чем создать новую игру, доиграйте текущую или сдайтесь.")
 
 
@@ -83,6 +83,12 @@ async def join_game_command(message: types.Message):
             if user_id in user_game_requests and user_game_requests[user_id] is None:
                 game = get_game(game_id)
                 if game:
+                    # Если игрок уже создал свою игру — удаляем её, чтобы он не участвовал в двух
+                    if user_id in current_games:
+                        old_game_id = current_games[user_id]
+                        delete_game(old_game_id)
+                        del current_games[user_id]
+
                     if join_game(game_id, user_id):
                         # Создаем матч в БД при присоединении второго игрока
                         db_gen = get_db()
@@ -142,6 +148,8 @@ async def shot_command_coord(message: types.Message):
 
         del current_games[message.from_user.id]
         del current_games[opponent_id]
+
+        delete_game(game_id)
 
         await message.answer(f"🏳️ Поражение! Вы сдались в игре!", reply_markup=main_menu())
         await message.bot.send_message(opponent_id, f"🎉 Победа! Противник сдался!", reply_markup=main_menu())
