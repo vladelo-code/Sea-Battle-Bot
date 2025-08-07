@@ -83,4 +83,4 @@ async def join_game_command(message: Message):
 def register_handler(dp: Dispatcher):
     dp.message.register(create_game_command, lambda m: m.text == "🚀 Новая игра")
     dp.message.register(process_game_id, lambda m: m.text in ("📎 Присоединиться к игре", "🔃 Обновить список игр"))
-    dp.message.register(join_game_command)
+    dp.message.register(join_game_command, lambda m: m.text and m.text.isalnum() and len(m.text) == 6)

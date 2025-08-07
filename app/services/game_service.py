@@ -5,7 +5,7 @@ from app.game_logic import print_board, process_shot, check_victory
 from app.db_utils.match import update_match_result
 from app.db_utils.stats import update_stats_after_match
 from app.dependencies import get_db
-from app.keyboards import main_menu, playing_menu
+from app.keyboards import main_menu, playing_menu, enemy_board_keyboard
 from app.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -91,20 +91,28 @@ async def handle_shot(message: Message):
         )
         return
 
-    switch_turn(game_id)
-
-    result = "💥 Попадание!" if hit else "❌ Мимо!"
     board_view = print_board(board, hide_ships=True)
 
-    await message.answer(
-        f"{result}\nОбновлённое поле противника:\n{board_view}\nОжидайте ход другого игрока!",
-        parse_mode="html",
-        reply_markup=ReplyKeyboardRemove()
-    )
-
-    await message.bot.send_message(
-        opponent_id,
-        f"Ход противника завершён.\nОбновлённое поле после выстрела:\n{board_view}\nВаш ход!",
-        parse_mode="html",
-        reply_markup=playing_menu(game_id, user_id)
-    )
+    if hit:
+        await message.answer(
+            f"💥 Попадание!\nОбновлённое поле противника:\n{board_view}\nВы снова стреляете!",
+            parse_mode="html",
+            reply_markup=enemy_board_keyboard(game_id, opponent_id)
+        )
+        await message.bot.send_message(
+            opponent_id,
+            f"Противник попал по вам!\nОбновлённое поле:\n{board_view}\nОжидайте следующий выстрел.",
+            parse_mode="html",
+            reply_markup=ReplyKeyboardRemove()
+        )
+    else:
+        switch_turn(game_id)
+        await message.answer(
+            f"❌ Мимо!\nВы промахнулись. Ход передан противнику.",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        await message.bot.send_message(
+            opponent_id,
+            f"Противник промахнулся. Теперь ваш ход!",
+            reply_markup=enemy_board_keyboard(game_id, user_id)
+        )

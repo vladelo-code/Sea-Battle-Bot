@@ -69,3 +69,20 @@ def rating_menu():
         resize_keyboard=True
     )
     return keyboard
+
+
+def enemy_board_keyboard(game_id, opponent_id):
+    board = games[game_id]['boards'][opponent_id]
+    keyboard = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        keyboard=[
+                     [
+                         KeyboardButton(text=(cell if cell in ["❌", "💥"] else f"{chr(65 + row)}{col + 1}"))
+                         for col, cell in enumerate(board[row])
+                     ]
+                     for row in range(10)
+                 ] + [
+                     [KeyboardButton(text="🏳️ Сдаться")]
+                 ],
+    )
+    return keyboard
