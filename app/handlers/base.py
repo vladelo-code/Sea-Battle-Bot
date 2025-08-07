@@ -6,7 +6,7 @@ from app.logger import setup_logger
 from app.services.player_service import register_or_update_player
 from app.dependencies import db_session
 from app.messages.texts import START_MESSAGE
-from app.messages.logs import PLAYER_STARTED
+from app.messages.logs import PLAYER_STARTED_BOT
 
 # Инициализация логгера
 logger = setup_logger(__name__)
@@ -14,7 +14,7 @@ logger = setup_logger(__name__)
 
 # Функция для обработки команды /start или '🏠 Главное меню'
 async def start_command(message: types.Message):
-    logger.info(PLAYER_STARTED.format(username=message.from_user.username))
+    logger.info(PLAYER_STARTED_BOT.format(username=message.from_user.username))
 
     # Регистрируем или обновляем игрока
     with db_session() as db:
