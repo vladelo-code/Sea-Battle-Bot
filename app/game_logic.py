@@ -3,6 +3,10 @@ import random
 # Задаем размер игрового поля
 BOARD_SIZE = 10
 
+DIRECTIONS_8 = [(-1, -1), (-1, 0), (-1, 1),  # Верхняя строка
+                (0, -1), (0, 1),  # Левая и правая ячейки
+                (1, -1), (1, 0), (1, 1)]  # Нижняя строка
+
 
 # Функция генерации чистого поля
 def create_empty_board():
@@ -20,12 +24,8 @@ def print_board(board, hide_ships=False):
         for cell in row:
             if hide_ships and cell == "🚢":
                 line.append("⬜")
-            elif cell == "🚢":
-                line.append("🚢")
-            elif cell == "❌":
-                line.append("❌")
-            elif cell == "💥":
-                line.append("💥")
+            elif cell in {"🚢", "❌", "💥"}:
+                line.append(cell)
             else:
                 line.append("⬜")
         rows.append(f"{letters[i]} " + " ".join(line))
@@ -73,10 +73,7 @@ def place_all_ships(board):
 
 # Функция для проверки на отсутствие кораблей в соседних клетках (включая диагонали)
 def is_valid_position(board, x, y):
-    directions = [(-1, -1), (-1, 0), (-1, 1),  # Верхняя строка
-                  (0, -1), (0, 1),  # Левая и правая ячейки
-                  (1, -1), (1, 0), (1, 1)]  # Нижняя строка
-    for dx, dy in directions:
+    for dx, dy in DIRECTIONS_8:
         nx, ny = x + dx, y + dy
         if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE:
             if board[nx][ny] == "🚢":
@@ -86,10 +83,7 @@ def is_valid_position(board, x, y):
 
 # Функция для закрашивания соседних клеток вокруг уничтоженного корабля
 def mark_surrounding(board, x, y):
-    directions = [(-1, -1), (-1, 0), (-1, 1),  # Верхняя строка
-                  (0, -1), (0, 1),  # Левая и правая ячейки
-                  (1, -1), (1, 0), (1, 1)]  # Нижняя строка
-    for dx, dy in directions:
+    for dx, dy in DIRECTIONS_8:
         nx, ny = x + dx, y + dy
         if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and board[nx][ny] == "⬜":
             board[nx][ny] = "❌"
