@@ -1,99 +1,17 @@
 from aiogram import Dispatcher, types
 from aiogram.types import Message
-
-from app.storage import get_game, get_board, switch_turn, get_turn, delete_game
-from app.game_logic import print_board, process_shot, check_victory
-from app.keyboards import main_menu, playing_menu
-from app.logger import setup_logger
-
-from app.db_utils.match import update_match_result
-from app.db_utils.stats import update_stats_after_match
-from app.dependencies import get_db
-from app.storage import current_games
 from app.constants import COORDINATES
-
-# Инициализация логгера
-logger = setup_logger(__name__)
-
-
-# Функция для хода (выстрела) по координатам с кнопок
-async def shot_command_coord(message: types.Message):
-    game_id = str(current_games[message.from_user.id])
-    game = get_game(game_id)
-
-    if message.text == "🏳️ Сдаться":
-        logger.info(f'🏳️ Игрок @{message.from_user.username} сдался, ID игры: {game_id}')
-        opponent_id = game["player1"] if game["turn"] == game["player2"] else game["player2"]
-
-        # Обновляем результат матча в БД: победитель — противник, результат — surrender
-        db_gen = get_db()
-        db = next(db_gen)
-        try:
-            update_match_result(db, game_id, winner_id=opponent_id, result="surrender")
-            update_stats_after_match(db, winner_id=opponent_id, loser_id=message.from_user.id)
-        finally:
-            db_gen.close()
-
-        del current_games[message.from_user.id]
-        del current_games[opponent_id]
-
-        delete_game(game_id)
-
-        await message.answer(f"🏳️ Поражение! Вы сдались в игре!", reply_markup=main_menu())
-        await message.bot.send_message(opponent_id, f"🎉 Победа! Противник сдался!", reply_markup=main_menu())
-    else:
-        coord = message.text.upper()
-        x = ord(coord[0]) - ord('A')
-        y = int(coord[1:]) - 1
-
-        if game and message.from_user.id == get_turn(game_id):
-            opponent_id = game["player1"] if game["turn"] == game["player2"] else game["player2"]
-            board = get_board(game_id, opponent_id)
-
-            if 0 <= x < 10 and 0 <= y < 10:
-                hit = process_shot(board, x, y)
-
-                # Проверка на победу после выстрела
-                if check_victory(board):
-                    # Обновляем результат матча в БД: победитель — current user, результат — normal
-                    db_gen = get_db()
-                    db = next(db_gen)
-                    try:
-                        update_match_result(db, game_id, winner_id=message.from_user.id, result="normal")
-                        update_stats_after_match(db, winner_id=message.from_user.id, loser_id=opponent_id)
-                    finally:
-                        db_gen.close()
-
-                    del current_games[message.from_user.id]
-                    del current_games[opponent_id]
-                    winner = message.from_user.username
-                    loser = await message.bot.get_chat(opponent_id)
-                    await message.answer(f"🎉 Победа! Вы уничтожили все корабли противника!", reply_markup=main_menu())
-                    await message.bot.send_message(opponent_id,
-                                                   f"💥 Поражение! Все ваши корабли уничтожены.\nПобедил @{winner}!",
-                                                   reply_markup=main_menu())
-                    delete_game(game_id)
-                    return
-
-                switch_turn(game_id)
-
-                result = "💥 Попадание!" if hit else "❌ Мимо!"
-                board_view = print_board(board, hide_ships=True)
-                await message.answer(
-                    f"{result}\nОбновлённое поле противника:\n{board_view}\n Ожидайте ход другого игрока!",
-                    parse_mode="html", reply_markup=types.ReplyKeyboardRemove())
-                await message.bot.send_message(
-                    opponent_id,
-                    f"Ход противника завершён.\n"
-                    f"Обновлённое поле после выстрела:\n{board_view}\n Ваш ход!", parse_mode="html",
-                    reply_markup=playing_menu(game_id, message.from_user.id))
-            else:
-                await message.answer("❗ Неверные координаты. Используйте формат A1.")
-        else:
-            await message.answer("❗ Сейчас не ваш ход или игра не найдена.")
+from app.services.game_service import handle_surrender, handle_shot
 
 
 def register_handler(dp: Dispatcher):
-    # Вызываем функцию хода (выстрела) по фразе введенным координатам или сдаемся
     dp.message.register(shot_command_coord, lambda message: message.text == "🏳️ Сдаться")
     dp.message.register(shot_command_coord, lambda message: message.text in COORDINATES)
+
+
+# Основная точка входа
+async def shot_command_coord(message: Message):
+    if message.text == "🏳️ Сдаться":
+        await handle_surrender(message)
+    else:
+        await handle_shot(message)
