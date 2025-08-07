@@ -1,0 +1,1 @@
+PLAYER_STARTED = "👋 Игрок @{username} запустил бота!"

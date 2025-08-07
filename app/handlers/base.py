@@ -3,30 +3,26 @@ from aiogram.filters import Command
 
 from app.keyboards import main_menu
 from app.logger import setup_logger
-from app.db_utils.player import get_or_create_player
-from app.dependencies import get_db
+from app.services.player_service import register_or_update_player
+from app.dependencies import db_session
 from app.messages.texts import START_MESSAGE
+from app.messages.logs import PLAYER_STARTED
 
 # Инициализация логгера
 logger = setup_logger(__name__)
 
 
-# Функция для обработки команды /start
+# Функция для обработки команды /start или '🏠 Главное меню'
 async def start_command(message: types.Message):
-    logger.info(f'👋 Игрок @{message.from_user.username} запустил бота!')
+    logger.info(PLAYER_STARTED.format(username=message.from_user.username))
 
     # Регистрируем или обновляем игрока
-    db_gen = get_db()
-    db = next(db_gen)
-    try:
-        get_or_create_player(db, telegram_id=str(message.from_user.id), username=message.from_user.username)
-    finally:
-        db_gen.close()
+    with db_session() as db:
+        register_or_update_player(db, telegram_id=str(message.from_user.id), username=message.from_user.username)
 
     await message.answer(START_MESSAGE, reply_markup=main_menu(), parse_mode="HTML", disable_web_page_preview=True)
 
 
 def register_handler(dp: Dispatcher):
-    # Вызываем функцию приветствия по команде /start или '🏠 Главное меню'
     dp.message.register(start_command, Command("start"))
     dp.message.register(start_command, lambda message: message.text == "🏠 Главное меню")
