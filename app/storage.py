@@ -4,6 +4,12 @@ from app.utils import generate_game_id
 # Тут хранятся текущие игры
 games = {}
 
+# Создаём глобальный словарь для хранения ID игры
+user_game_requests = {}
+
+# Создаём глобальный словарь для хранения ID игроков и матчей, в которых они участвуют
+current_games = {}
+
 
 # Функция для создания игры
 def create_game(player_id):
