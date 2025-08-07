@@ -12,6 +12,27 @@ CHOOSE_CONNECTING_GAME = "💬 Выберите и отправьте ID игр�
 
 JOIN_CONNECTING_GAME_ERROR = "❗ Нельзя подключаться к своей же игре."
 
+STATS_HEADER = "📊 Ваша статистика:\n\n"
+
+STATS_TEMPLATE = (
+    "🎮 Сыграно матчей: {games_played}\n"
+    "🏆 Побед: {wins}\n"
+    "💥 Поражений: {losses}\n"
+    "📈 Рейтинг: {rating}"
+)
+
+NO_STATS_MESSAGE = "🤔 У вас пока нет статистики. Сыграйте первую игру!"
+
+NOT_REGISTERED_MESSAGE = "❗ Вы ещё не зарегистрированы в системе."
+
+EMPTY_LEADERBOARD_MESSAGE = "😔 Рейтинг пока пуст."
+
+LEADERBOARD_HEADER = "🥇 Топ игроков по рейтингу:\n\n"
+
+LEADERBOARD_ROW = "{index}. {username} — {rating} 🏆\n"
+
+UNKNOWN_USERNAME = "Призрачный юнга"
+
 ELO_INFO = ("📊 <b>Как считается рейтинг?</b>\n\n"
             "Система основана на алгоритме <b>Elo</b> — популярной модели оценки навыков игроков.\n\n"
             "☝🏻 <b>Основные принципы:</b>\n"
