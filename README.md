@@ -64,9 +64,13 @@
 10. 👤 Просматриваете свою статистику: матчи, победы, поражения, рейтинг.
 11. 🥇 Отслеживайте общий рейтинг и занимайте первые места!
 
-<img src="photos/Example-photo1.png" width="600" style="display: block; margin: auto;">
+<img src="photos/Example-photo1.png" width="600" style="display: block; margin: auto;" alt="Example-photo1">
 
-<img src="photos/Example-photo2.png" width="600" style="display: block; margin: auto;">
+
+<img src="photos/Example-photo2.png" width="600" style="display: block; margin: auto;" alt="Example-photo2">
+
+
+<img src="photos/Example-photo3.png" width="600" style="display: block; margin: auto;" alt="Example-photo3">
 
 ---
 
