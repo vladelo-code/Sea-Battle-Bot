@@ -1,4 +1,5 @@
 from aiogram.types import Message
+from typing import Optional
 
 from app.state.in_memory import games
 from app.game_logic import print_board, process_shot, check_victory
@@ -15,12 +16,22 @@ from app.messages.texts import (
 logger = setup_logger(__name__)
 
 
-async def handle_surrender(message: Message):
+async def handle_surrender(message: Message) -> None:
+    """
+    Обрабатывает сдачу игрока в игре:
+    - Находит игру по ID пользователя
+    - Обновляет результат матча в базе
+    - Обновляет статистику игроков
+    - Удаляет игру из памяти
+    - Отправляет сообщения о поражении и победе игрокам
+
+    :param message: Объект сообщения от игрока, сдающегося.
+    """
     user_id = message.from_user.id
     username = message.from_user.username
 
     # Найдем игру, в которой играет user_id
-    game_id = None
+    game_id: Optional[str] = None
     for gid, g in games.items():
         if user_id == g.get("player1") or user_id == g.get("player2"):
             game_id = gid
@@ -48,12 +59,24 @@ async def handle_surrender(message: Message):
     await message.bot.send_message(opponent_id, "🎉 Победа! Противник сдался!", reply_markup=main_menu())
 
 
-async def handle_shot(message: Message):
+async def handle_shot(message: Message) -> None:
+    """
+    Обрабатывает выстрел игрока по координатам:
+    - Находит игру по ID пользователя
+    - Проверяет, является ли ход игрока текущим
+    - Парсит координаты выстрела
+    - Обновляет состояние доски и игры
+    - Проверяет победу
+    - Отправляет обновления игрокам
+    - Обновляет ID сообщений для последующего удаления/редактирования
+
+    :param message: Объект сообщения с координатами выстрела.
+    """
     user_id = message.from_user.id
     username = message.from_user.username
 
     # Найдем игру, в которой играет user_id
-    game_id = None
+    game_id: Optional[str] = None
     for gid, g in games.items():
         if user_id == g.get("player1") or user_id == g.get("player2"):
             game_id = gid
