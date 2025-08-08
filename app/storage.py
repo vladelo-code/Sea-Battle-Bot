@@ -48,7 +48,6 @@ def join_game(game_id: str, player_id: int, username: str) -> bool:
         game["player2"] = player_id
         game["boards"][player_id] = board
         game["usernames"][player_id] = safe_username(username, UNKNOWN_USERNAME_SECOND)
-        print(games)
         return True
     return False
 
