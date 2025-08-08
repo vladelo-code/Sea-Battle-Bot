@@ -1,15 +1,24 @@
+from typing import Optional
+
 from app.game_logic import create_empty_board, place_all_ships
 from app.utils import generate_game_id
 
 # Тут хранятся текущие игры с расширенной структурой
-games = {}
+games: dict[str, dict] = {}
 
 # Создаём глобальный словарь для хранения ID игры, где пользователь ожидает действия
-user_game_requests = {}
+user_game_requests: dict[int, Optional[None]] = {}
 
 
-# Функция для создания игры
-def create_game(player_id: int, username: str):
+def create_game(player_id: int, username: str) -> str:
+    """
+    Создает новую игру с игроком player_id и его username.
+    Генерирует уникальный ID игры, создает доску, размещает корабли и инициализирует структуру игры.
+
+    :param player_id: ID первого игрока.
+    :param username: Username первого игрока.
+    :return: Сгенерированный ID игры.
+    """
     game_id = generate_game_id()
     board = create_empty_board()
     place_all_ships(board)
@@ -24,8 +33,16 @@ def create_game(player_id: int, username: str):
     return game_id
 
 
-# Функция для присоединения к игре
-def join_game(game_id: str, player_id: int, username: str):
+def join_game(game_id: str, player_id: int, username: str) -> bool:
+    """
+    Присоединяет второго игрока к существующей игре, если место свободно.
+    Создает игровое поле для второго игрока и сохраняет его username.
+
+    :param game_id: ID игры для присоединения.
+    :param player_id: ID второго игрока.
+    :param username: Username второго игрока.
+    :return: True если присоединение прошло успешно, иначе False.
+    """
     game = games.get(game_id)
     if game and game["player2"] is None:
         board = create_empty_board()
@@ -37,28 +54,52 @@ def join_game(game_id: str, player_id: int, username: str):
     return False
 
 
-# Функция для получения игры
-def get_game(game_id: str):
+def get_game(game_id: str) -> Optional[dict]:
+    """
+    Возвращает структуру игры по game_id или None если игры нет.
+
+    :param game_id: ID игры.
+    :return: Словарь с данными игры или None.
+    """
     return games.get(game_id)
 
 
-# Функция смены хода
-def switch_turn(game_id: str):
+def switch_turn(game_id: str) -> None:
+    """
+    Меняет текущего игрока, чей ход, на противоположного.
+
+    :param game_id: ID игры.
+    """
     game = games[game_id]
     game["turn"] = game["player1"] if game["turn"] == game["player2"] else game["player2"]
 
 
-# Функция получения игрового поля
-def get_board(game_id: str, player_id: int):
+def get_board(game_id: str, player_id: int) -> list[list[str]]:
+    """
+    Возвращает игровое поле указанного игрока в игре.
+
+    :param game_id: ID игры.
+    :param player_id: ID игрока.
+    :return: Игровое поле игрока.
+    """
     return games[game_id]["boards"][player_id]
 
 
-# Функция получения текущего хода
-def get_turn(game_id: str):
+def get_turn(game_id: str) -> int:
+    """
+    Возвращает ID игрока, который должен сделать ход.
+
+    :param game_id: ID игры.
+    :return: ID игрока, чей ход.
+    """
     return games[game_id]["turn"]
 
 
-# Функция удаления игры
-def delete_game(game_id: str):
+def delete_game(game_id: str) -> None:
+    """
+    Удаляет игру из словаря игр по ID.
+
+    :param game_id: ID игры для удаления.
+    """
     if game_id in games:
         del games[game_id]
