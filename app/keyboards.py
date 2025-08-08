@@ -14,6 +14,7 @@ def main_menu() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text="🚀 Новая игра")],
             [KeyboardButton(text="📎 Присоединиться к игре")],
+            [KeyboardButton(text="🚓 Правила игры")],
             [KeyboardButton(text="👤 Мой профиль")],
             [KeyboardButton(text="🥇 Рейтинг")]
         ],

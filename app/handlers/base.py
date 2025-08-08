@@ -6,9 +6,8 @@ from app.keyboards import main_menu
 from app.logger import setup_logger
 from app.services.player_service import register_or_update_player
 from app.dependencies import db_session
-from app.messages.texts import START_MESSAGE
+from app.messages.texts import START_MESSAGE, GAME_RULES
 
-# Инициализация логгера
 logger = setup_logger(__name__)
 
 
@@ -28,13 +27,27 @@ async def start_command(message: Message) -> None:
     await message.answer(START_MESSAGE, reply_markup=main_menu(), parse_mode="HTML", disable_web_page_preview=True)
 
 
+async def show_rules(message: Message) -> None:
+    """
+    Обрабатывает запрос на отображение правил игры.
+    - Логирует запрос пользователя.
+    - Отправляет текст с правилами игры.
+
+    :param message: Объект входящего сообщения от пользователя.
+    """
+    logger.info(f"🚓 Игрок @{message.from_user.username} запросил правила игры!")
+    await message.answer(GAME_RULES, parse_mode="HTML")
+
+
 def register_handler(dp: Dispatcher) -> None:
     """
-    Регистрирует обработчики команд:
-    - /start
-    - '🏠 Главное меню'
+    Регистрирует обработчики команд и кнопок:
+    - /start — запуск бота
+    - '🏠 Главное меню' — возврат в главное меню
+    - '🚓 Правила игры' — показ правил игры
 
     :param dp: Объект диспетчера aiogram.
     """
     dp.message.register(start_command, Command("start"))
     dp.message.register(start_command, lambda message: message.text == "🏠 Главное меню")
+    dp.message.register(show_rules, lambda message: message.text == "🚓 Правила игры")
