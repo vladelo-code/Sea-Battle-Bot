@@ -2,8 +2,14 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from app.storage import games
 
 
-# Клавиатура в главном меню
-def main_menu():
+def main_menu() -> ReplyKeyboardMarkup:
+    """
+    Создает клавиатуру главного меню с основными командами:
+    - Новая игра
+    - Присоединиться к игре
+    - Мой профиль
+    - Рейтинг
+    """
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🚀 Новая игра")],
@@ -16,8 +22,12 @@ def main_menu():
     return keyboard
 
 
-# Функция для подключения к игре
-def connect_menu():
+def connect_menu() -> ReplyKeyboardMarkup:
+    """
+    Создает клавиатуру для меню подключения к игре:
+    - Присоединиться к игре
+    - Главное меню
+    """
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="📎 Присоединиться к игре")],
@@ -28,8 +38,16 @@ def connect_menu():
     return keyboard
 
 
-# Клавиатура с динамическим полем игры
-def playing_menu(game_id, player_id):
+def playing_menu(game_id: str, player_id: int) -> ReplyKeyboardMarkup:
+    """
+    Создает клавиатуру с игровым полем для текущего игрока.
+    Отображает клетки с состояниями: попадание, промах или координаты.
+    Добавляет кнопку 'Сдаться'.
+
+    :param game_id: ID текущей игры.
+    :param player_id: ID игрока, для которого создается клавиатура.
+    :return: Объект ReplyKeyboardMarkup с игровым полем и кнопкой сдаться.
+    """
     keyboard = ReplyKeyboardMarkup(
         resize_keyboard=True,
         keyboard=[
@@ -45,8 +63,14 @@ def playing_menu(game_id, player_id):
     return keyboard
 
 
-# Клавиатура со списком активных игр
-def current_game_menu():
+def current_game_menu() -> ReplyKeyboardMarkup:
+    """
+    Создает клавиатуру со списком всех активных игр.
+    Добавляет кнопки:
+    - Новая игра
+    - Обновить список игр
+    - Главное меню
+    """
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=f"{game}") for game in games],
@@ -59,8 +83,12 @@ def current_game_menu():
     return keyboard
 
 
-# Клавиатура в меню с рейтингом
-def rating_menu():
+def rating_menu() -> ReplyKeyboardMarkup:
+    """
+    Создает клавиатуру меню рейтинга с кнопками:
+    - О рейтинге
+    - Главное меню
+    """
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="ℹ️ О рейтинге")],
@@ -71,7 +99,16 @@ def rating_menu():
     return keyboard
 
 
-def enemy_board_keyboard(game_id, opponent_id):
+def enemy_board_keyboard(game_id: str, opponent_id: int) -> ReplyKeyboardMarkup:
+    """
+    Создает клавиатуру с игровым полем соперника для отображения пользователю.
+    Отображает клетки с состояниями: попадание, промах или координаты.
+    Добавляет кнопку 'Сдаться'.
+
+    :param game_id: ID текущей игры.
+    :param opponent_id: ID соперника (для отображения его поля).
+    :return: Объект ReplyKeyboardMarkup с игровым полем соперника и кнопкой сдаться.
+    """
     board = games[game_id]['boards'][opponent_id]
     keyboard = ReplyKeyboardMarkup(
         resize_keyboard=True,
