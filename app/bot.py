@@ -18,7 +18,12 @@ register_handlers(dp)
 
 async def main():
     logger.info("✅ Морской Бой Бот запущен!")
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.exception(f"Ошибка в bot.py: {e}")
+    finally:
+        await bot.session.close()
 
 
 if __name__ == "__main__":
