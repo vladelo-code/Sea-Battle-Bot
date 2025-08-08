@@ -76,7 +76,7 @@ async def leaderboard_command(message: Message) -> None:
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
 
         logger.info(f"🥇 Игрок @{username} получил рейтинг игроков.")
-        await message.answer(text, reply_markup=rating_menu())
+        await message.answer(text, parse_mode='html', reply_markup=rating_menu())
 
 
 async def get_elo_explanation(message: Message) -> None:
