@@ -1,9 +1,11 @@
 from app.state.in_memory import user_game_requests, games
 from app.storage import create_game, join_game
+from app.utils.none_username import safe_username
 from app.db_utils.match import create_match
 from app.db_utils.player import get_or_create_player
 from app.dependencies import db_session
 from app.logger import setup_logger
+from app.messages.texts import UNKNOWN_USERNAME_SECOND
 
 logger = setup_logger(__name__)
 
@@ -60,7 +62,7 @@ def try_join_game(game_id: str, user_id: int, username: str) -> str | dict:
         game = games[game_id]
         game["player2"] = user_id
         game["usernames"] = game.get("usernames", {})
-        game["usernames"][user_id] = username
+        game["usernames"][user_id] = safe_username(username, UNKNOWN_USERNAME_SECOND)
 
         # Обновляем статус в user_game_requests (удаляем)
         user_game_requests.pop(user_id, None)

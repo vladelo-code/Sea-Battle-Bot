@@ -88,13 +88,16 @@ async def join_game_command(message: Message) -> None:
         user_game_requests.pop(user_id, None)
         player1 = result["player1"]
         player2 = result["player2"]
-        second_player_username = games[game_id]["usernames"].get(player1)
+        usernames = games[game_id].get("usernames", {})
+        username_player1 = usernames.get(player1, "Игрок 1")
+        username_player2 = usernames.get(player2, "Игрок 2")
 
         logger.info(f"➕ Игрок @{username} присоединился к игре, ID игры: {game_id}")
+
         await message.answer(SUCCESSFULLY_JOINED.format(game_id=game_id))
-        await message.bot.send_message(player1, PLAYER1_GAME_START.format(username=username), parse_mode="html",
+        await message.bot.send_message(player1, PLAYER1_GAME_START.format(username=username_player2), parse_mode="html",
                                        reply_markup=ReplyKeyboardRemove())
-        await message.bot.send_message(player2, PLAYER2_GAME_START.format(username=second_player_username),
+        await message.bot.send_message(player2, PLAYER2_GAME_START.format(username=username_player1),
                                        parse_mode="html",
                                        reply_markup=ReplyKeyboardRemove())
 

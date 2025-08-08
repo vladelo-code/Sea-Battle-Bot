@@ -112,19 +112,22 @@ async def handle_shot(message: Message) -> None:
     board = game["boards"][opponent_id]
     hit = process_shot(board, x, y)
 
+    # Получаем username'ы из словаря, только для сообщений
+    usernames = game.get("usernames", {})
+    current_username = usernames.get(user_id, "Игрок 1")
+    opponent_username = usernames.get(opponent_id, "Игрок 2")
+
     if check_victory(board):
         with db_session() as db:
             update_match_result(db, game_id, winner_id=user_id, result="normal")
             update_stats_after_match(db, winner_id=user_id, loser_id=opponent_id)
 
-        second_player_username = games[game_id]["usernames"].get(opponent_id)
-
         games.pop(game_id, None)
 
-        await message.answer(WINNER.format(username=second_player_username), reply_markup=main_menu())
+        await message.answer(WINNER.format(username=opponent_username), reply_markup=main_menu())
         await message.bot.send_message(
             opponent_id,
-            LOSER.format(username=username),
+            LOSER.format(username=current_username),
             reply_markup=main_menu()
         )
         return
