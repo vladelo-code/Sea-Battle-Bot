@@ -7,14 +7,29 @@ from app.logger import setup_logger
 logger = setup_logger(__name__)
 
 
-def try_create_game(user_id: int, username: str):
+def try_create_game(user_id: int, username: str) -> str:
+    """
+    Создает новую игру и отмечает пользователя, что он создал игру и ожидает присоединения второго игрока.
+
+    :param user_id: ID пользователя, создающего игру.
+    :param username: Username пользователя.
+    :return: ID созданной игры.
+    """
     from app.storage import create_game
     game_id = create_game(user_id, username)
     user_game_requests[user_id] = None  # пометка, что игрок создал игру и ждёт присоединения
     return game_id
 
 
-def try_join_game(game_id: str, user_id: int, username: str):
+def try_join_game(game_id: str, user_id: int, username: str) -> str | dict:
+    """
+    Пытается присоединить пользователя к существующей игре.
+
+    :param game_id: ID игры, к которой присоединяется игрок.
+    :param user_id: ID присоединяющегося игрока.
+    :param username: Username присоединяющегося игрока.
+    :return: Строка с ошибкой ('not_found', 'same_game', 'invalid') или словарь с данными об успешном присоединении.
+    """
     if user_id in user_game_requests and user_game_requests[user_id] is None:
         game = games.get(game_id)
         if not game:
