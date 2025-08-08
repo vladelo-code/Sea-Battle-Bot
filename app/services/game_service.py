@@ -29,7 +29,6 @@ async def handle_surrender(message: Message) -> None:
     :param message: Объект сообщения от игрока, сдающегося.
     """
     user_id = message.from_user.id
-    username = message.from_user.username
 
     # Найдем игру, в которой играет user_id
     game_id: Optional[str] = None
@@ -47,20 +46,22 @@ async def handle_surrender(message: Message) -> None:
     player2 = game["player2"]
     opponent_id = player2 if user_id == player1 else player1
 
+    usernames = game.get("usernames", {})
+    loser_username = usernames.get(user_id, "Игрок 1")
+    winner_username = usernames.get(opponent_id, "Игрок 2")
+
+    logger.info(f'🏳️ Игрок @{loser_username} сдался, ID игры: {game_id}')
+    logger.info(f'🎉️ Игрок @{winner_username} выиграл, ID игры: {game_id}')
+
     with db_session() as db:
         update_match_result(db, game_id, winner_id=opponent_id, result="surrender")
         update_stats_after_match(db, winner_id=opponent_id, loser_id=user_id)
 
-    second_player_username = games[game_id]["usernames"].get(player2)
-
-    logger.info(f'🏳️ Игрок @{username} сдался, ID игры: {game_id}')
-    logger.info(f'🎉️ Игрок @{second_player_username} выиграл, ID игры: {game_id}')
-
     # Удаляем игру и все связи
     games.pop(game_id, None)
 
-    await message.bot.send_message(user_id, LOSER_SUR.format(username=second_player_username), reply_markup=main_menu())
-    await message.bot.send_message(opponent_id, WINNER_SUR.format(username=username),
+    await message.bot.send_message(user_id, LOSER_SUR.format(username=winner_username), reply_markup=main_menu())
+    await message.bot.send_message(opponent_id, WINNER_SUR.format(username=loser_username),
                                    reply_markup=main_menu())
 
 
@@ -120,10 +121,10 @@ async def handle_shot(message: Message) -> None:
 
         games.pop(game_id, None)
 
-        await message.answer(WINNER.format(username=username), reply_markup=main_menu())
+        await message.answer(WINNER.format(username=second_player_username), reply_markup=main_menu())
         await message.bot.send_message(
             opponent_id,
-            LOSER.format(username=second_player_username),
+            LOSER.format(username=username),
             reply_markup=main_menu()
         )
         return
@@ -145,11 +146,11 @@ async def handle_shot(message: Message) -> None:
             reply_markup=enemy_board_keyboard(game_id, user_id)
         )
 
-        # Удаляем сообщение соперника
-        await message.bot.delete_message(
-            chat_id=opponent_id,
-            message_id=game.get("message_ids", {}).get(opponent_id, 0)
-        )
+        # # Удаляем сообщение соперника
+        # await message.bot.delete_message(
+        #     chat_id=opponent_id,
+        #     message_id=game.get("message_ids", {}).get(opponent_id, 0)
+        # )
 
     else:
         # Меняем ход
@@ -171,11 +172,11 @@ async def handle_shot(message: Message) -> None:
             reply_markup=enemy_board_keyboard(game_id, user_id)
         )
 
-        # Удаляем сообщение соперника
-        await message.bot.delete_message(
-            chat_id=opponent_id,
-            message_id=game.get("message_ids", {}).get(opponent_id, 0)
-        )
+        # # Удаляем сообщение соперника
+        # await message.bot.delete_message(
+        #     chat_id=opponent_id,
+        #     message_id=game.get("message_ids", {}).get(opponent_id, 0)
+        # )
 
     # Обновляем message_ids в игре
     game.setdefault("message_ids", {})
