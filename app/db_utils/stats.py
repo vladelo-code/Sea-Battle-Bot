@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.player_stats import PlayerStats
 from app.models.player import Player
 
-from app.rating_utils import calculate_elo
+from app.utils.rating import calculate_elo
 
 
 def get_or_create_stats(db: Session, player_id: int) -> PlayerStats:
