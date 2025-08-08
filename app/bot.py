@@ -1,9 +1,8 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 
-from app.handlers import register_handlers
+from app.handlers.register import register_handlers
 from app.logger import setup_logger
-
 from app.config import BOT_TOKEN
 
 # Инициализация логгера
@@ -18,8 +17,13 @@ register_handlers(dp)
 
 
 async def main():
-    logger.info("✅ Sea-Battle-Bot запущен!")
-    await dp.start_polling(bot)
+    logger.info("✅ Морской Бой Бот запущен!")
+    try:
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.exception(f"Ошибка в bot.py: {e}")
+    finally:
+        await bot.session.close()
 
 
 if __name__ == "__main__":

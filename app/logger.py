@@ -2,6 +2,17 @@ import logging
 
 
 def setup_logger(name: str) -> logging.Logger:
+    """
+    Создает и настраивает логгер с заданным именем.
+
+    Логгер выводит сообщения в консоль с форматом:
+    [ГГГГ-ММ-ДД ЧЧ:ММ:СС] сообщение
+
+    Если у логгера уже есть обработчики, новых не добавляет.
+
+    :param name: Имя логгера.
+    :return: Настроенный экземпляр logging.
+    """
     logger = logging.getLogger(name)
 
     if not logger.handlers:

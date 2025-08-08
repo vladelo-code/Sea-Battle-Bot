@@ -1,4 +1,5 @@
 import random
+from typing import List, Tuple, Optional, Set
 
 # Задаем размер игрового поля
 BOARD_SIZE = 10
@@ -7,14 +8,23 @@ DIRECTIONS_8 = [(-1, -1), (-1, 0), (-1, 1),  # Верхняя строка
                 (0, -1), (0, 1),  # Левая и правая ячейки
                 (1, -1), (1, 0), (1, 1)]  # Нижняя строка
 
+Board = List[List[str]]
 
-# Функция генерации чистого поля
-def create_empty_board():
+
+def create_empty_board() -> Board:
+    """
+    Создает пустое игровое поле размером BOARD_SIZE x BOARD_SIZE.
+    """
     return [["⬜" for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
 
-# Функция вывода поля
-def print_board(board, hide_ships=False):
+def print_board(board: Board, hide_ships: bool = False) -> str:
+    """
+    Возвращает строку для отображения игрового поля.
+
+    :param board: Игровое поле.
+    :param hide_ships: Если True, скрывает корабли на поле.
+    """
     letters = "ABCDEFGHIJ"
     header = "  1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟"
     rows = []
@@ -34,8 +44,17 @@ def print_board(board, hide_ships=False):
     return "<code>\n" + header + "\n" + "\n".join(rows) + "\n</code>"
 
 
-# Функция размещения кораблей на поле
-def place_ship(board, x, y, size, orientation):
+def place_ship(board: Board, x: int, y: int, size: int, orientation: str) -> bool:
+    """
+    Пытается разместить корабль на поле.
+
+    :param board: Игровое поле.
+    :param x: Начальная координата по X.
+    :param y: Начальная координата по Y.
+    :param size: Размер корабля.
+    :param orientation: Направление ('horizontal' или 'vertical').
+    :return: True, если размещение успешно; иначе False.
+    """
     if orientation == "horizontal":
         if y + size > BOARD_SIZE:
             return False
@@ -59,8 +78,12 @@ def place_ship(board, x, y, size, orientation):
     return True
 
 
-# Функция генерации кораблей на поле
-def place_all_ships(board):
+def place_all_ships(board: Board) -> None:
+    """
+    Размещает все корабли на поле по заданным размерам.
+
+    :param board: Игровое поле.
+    """
     ship_sizes = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
     for size in ship_sizes:
         placed = False
@@ -71,8 +94,15 @@ def place_all_ships(board):
             placed = place_ship(board, x, y, size, orientation)
 
 
-# Функция для проверки на отсутствие кораблей в соседних клетках (включая диагонали)
-def is_valid_position(board, x, y):
+def is_valid_position(board: Board, x: int, y: int) -> bool:
+    """
+    Проверяет, нет ли кораблей в соседних клетках (включая диагонали).
+
+    :param board: Игровое поле.
+    :param x: Координата X.
+    :param y: Координата Y.
+    :return: True, если положение валидно; иначе False.
+    """
     for dx, dy in DIRECTIONS_8:
         nx, ny = x + dx, y + dy
         if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE:
@@ -81,16 +111,31 @@ def is_valid_position(board, x, y):
     return True
 
 
-# Функция для закрашивания соседних клеток вокруг уничтоженного корабля
-def mark_surrounding(board, x, y):
+def mark_surrounding(board: Board, x: int, y: int) -> None:
+    """
+    Закрашивает клетки вокруг уничтоженного корабля.
+
+    :param board: Игровое поле.
+    :param x: Координата X.
+    :param y: Координата Y.
+    """
     for dx, dy in DIRECTIONS_8:
         nx, ny = x + dx, y + dy
         if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and board[nx][ny] == "⬜":
             board[nx][ny] = "❌"
 
 
-# Функция проверки уничтожен ли корабль, и собирает его координаты
-def is_ship_destroyed(board, x, y, visited=None):
+def is_ship_destroyed(board: Board, x: int, y: int, visited: Optional[Set[Tuple[int, int]]] = None) -> Tuple[
+    bool, List[Tuple[int, int]]]:
+    """
+    Проверяет, уничтожен ли корабль, начиная с клетки (x, y).
+
+    :param board: Игровое поле.
+    :param x: Координата X.
+    :param y: Координата Y.
+    :param visited: Множество уже проверенных клеток.
+    :return: Кортеж (уничтожен ли, список координат всех поврежденных клеток корабля).
+    """
     if visited is None:
         visited = set()
     if (x, y) in visited or board[x][y] != "💥":
@@ -114,16 +159,29 @@ def is_ship_destroyed(board, x, y, visited=None):
     return destroyed, ship_cells
 
 
-# Функция для обработки уничтожения корабля
-def handle_ship_destruction(board, x, y):
+def handle_ship_destruction(board: Board, x: int, y: int) -> None:
+    """
+    Проверяет и обрабатывает полное уничтожение корабля.
+
+    :param board: Игровое поле.
+    :param x: Координата попадания X.
+    :param y: Координата попадания Y.
+    """
     destroyed, ship_cells = is_ship_destroyed(board, x, y)
     if destroyed:
         for sx, sy in ship_cells:
             mark_surrounding(board, sx, sy)
 
 
-# Функция для обработки хода (выстрела)
-def process_shot(board, x, y):
+def process_shot(board: Board, x: int, y: int) -> Optional[bool]:
+    """
+    Обрабатывает выстрел по координатам.
+
+    :param board: Игровое поле.
+    :param x: Координата X.
+    :param y: Координата Y.
+    :return: True — попадание, False — промах, None — недопустимый ход.
+    """
     if board[x][y] == "🚢":
         board[x][y] = "💥"
         handle_ship_destruction(board, x, y)  # Проверка и закрашивание
@@ -134,8 +192,13 @@ def process_shot(board, x, y):
     return None
 
 
-# Функция проверки на победу
-def check_victory(board):
+def check_victory(board: Board) -> bool:
+    """
+    Проверяет, остались ли корабли на поле.
+
+    :param board: Игровое поле.
+    :return: True, если победа (кораблей не осталось); иначе False.
+    """
     for row in board:
         if "🚢" in row:
             return False
