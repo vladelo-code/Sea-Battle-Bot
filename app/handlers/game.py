@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
 from aiogram.types import Message
 
-from app.constants import COORDINATES
+from app.state.constants import COORDINATES
 from app.services.game_service import handle_surrender, handle_shot
 
 
