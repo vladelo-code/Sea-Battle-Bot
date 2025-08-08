@@ -92,9 +92,10 @@ async def join_game_command(message: Message) -> None:
 
         logger.info(f"➕ Игрок @{username} присоединился к игре, ID игры: {game_id}")
         await message.answer(SUCCESSFULLY_JOINED.format(game_id=game_id))
-        await message.bot.send_message(player1, PLAYER1_GAME_START.format(username=username),
+        await message.bot.send_message(player1, PLAYER1_GAME_START.format(username=username), parse_mode="html",
                                        reply_markup=ReplyKeyboardRemove())
         await message.bot.send_message(player2, PLAYER2_GAME_START.format(username=second_player_username),
+                                       parse_mode="html",
                                        reply_markup=ReplyKeyboardRemove())
 
         # Отправляем сообщение игроку 1 и сохраняем message_id
