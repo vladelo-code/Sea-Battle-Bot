@@ -93,7 +93,7 @@ async def handle_shot(message: Message):
         # Отправляем новое сообщение стрелявшему
         msg1 = await message.bot.send_message(
             chat_id=user_id,
-            text="💥 Попадание! Стреляйте ещё!",
+            text="💥 <b>Попадание!</b> Стреляйте ещё!",
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, opponent_id)
         )
@@ -106,8 +106,8 @@ async def handle_shot(message: Message):
         # Отправляем новое сообщение сопернику
         msg2 = await message.bot.send_message(
             chat_id=opponent_id,
-            text="🔥 По вам попали!\n" + YOUR_BOARD_TEXT_AFTER_SHOT.format(
-                board=print_board(get_board(game_id, opponent_id))),
+            text="🔥 <b>По вам попали!</b>\n" + YOUR_BOARD_TEXT_AFTER_SHOT.format(
+                board=print_board(get_board(game_id, opponent_id))) + "\n⏳ <b>Ожидайте ход соперника!</b>",
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, user_id)
         )
@@ -118,7 +118,7 @@ async def handle_shot(message: Message):
         # Отправляем новое сообщение стрелявшему
         msg1 = await message.bot.send_message(
             chat_id=user_id,
-            text="❌ Мимо! Теперь ходит другой игрок",
+            text="❌ <b>Мимо!</b> Теперь ходит другой игрок",
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, opponent_id)
         )
@@ -131,7 +131,7 @@ async def handle_shot(message: Message):
         # Отправляем новое сообщение сопернику
         msg2 = await message.bot.send_message(
             chat_id=opponent_id,
-            text="🎯 Ваш ход!\n" + YOUR_BOARD_TEXT_AFTER_SHOT.format(board=print_board(get_board(game_id, opponent_id))),
+            text=YOUR_BOARD_TEXT_AFTER_SHOT.format(board=print_board(get_board(game_id, opponent_id))) + "\n🎯 <b>Ваш ход!</b>",
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, user_id)
         )
