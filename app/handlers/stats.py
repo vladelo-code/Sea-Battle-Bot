@@ -15,11 +15,10 @@ from app.messages.texts import (
     EMPTY_LEADERBOARD_MESSAGE,
     LEADERBOARD_HEADER,
     LEADERBOARD_ROW,
-    UNKNOWN_USERNAME,
+    UNKNOWN_USERNAME_FIRST,
     ELO_INFO,
 )
 
-# Инициализация логгера
 logger = setup_logger(__name__)
 
 
@@ -28,7 +27,7 @@ async def stats_command(message: Message) -> None:
     Обрабатывает команду показа статистики игрока.
     Проверяет регистрацию и наличие статистики, отправляет результат или соответствующее сообщение.
 
-    :param message: Сообщение от пользователя aiogram.types.Message.
+    :param message: Сообщение от пользователя Message.
     """
     username = message.from_user.username
     with db_session() as db:
@@ -73,7 +72,7 @@ async def leaderboard_command(message: Message) -> None:
 
         text = LEADERBOARD_HEADER
         for i, (player_username, rating) in enumerate(top_players, 1):
-            name = f"@{player_username}" if player_username else UNKNOWN_USERNAME
+            name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
 
         logger.info(f"🥇 Игрок @{username} получил рейтинг игроков.")

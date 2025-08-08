@@ -2,8 +2,8 @@ from typing import Optional
 
 from app.game_logic import create_empty_board, place_all_ships
 from app.utils import generate_game_id
-
 from app.state.in_memory import games
+from app.messages.texts import UNKNOWN_USERNAME_FIRST, UNKNOWN_USERNAME_SECOND
 
 
 def create_game(player_id: int, username: str) -> str:
@@ -23,7 +23,7 @@ def create_game(player_id: int, username: str) -> str:
         "player2": None,
         "boards": {player_id: board},
         "turn": player_id,
-        "usernames": {player_id: username},
+        "usernames": {player_id: username if username is not None else UNKNOWN_USERNAME_FIRST},
         "message_ids": {},
     }
     return game_id
@@ -45,7 +45,7 @@ def join_game(game_id: str, player_id: int, username: str) -> bool:
         place_all_ships(board)
         game["player2"] = player_id
         game["boards"][player_id] = board
-        game["usernames"][player_id] = username
+        game["usernames"][player_id] = username if username is not None else UNKNOWN_USERNAME_SECOND
         return True
     return False
 
