@@ -1,4 +1,4 @@
-from app.storage import games, user_game_requests
+from app.state.in_memory import user_game_requests, games
 from app.db_utils.match import create_match
 from app.db_utils.player import get_or_create_player
 from app.dependencies import db_session

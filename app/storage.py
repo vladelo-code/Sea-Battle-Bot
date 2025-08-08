@@ -3,11 +3,7 @@ from typing import Optional
 from app.game_logic import create_empty_board, place_all_ships
 from app.utils import generate_game_id
 
-# Тут хранятся текущие игры с расширенной структурой
-games: dict[str, dict] = {}
-
-# Создаём глобальный словарь для хранения ID игры, где пользователь ожидает действия
-user_game_requests: dict[int, Optional[None]] = {}
+from app.state.in_memory import games
 
 
 def create_game(player_id: int, username: str) -> str:

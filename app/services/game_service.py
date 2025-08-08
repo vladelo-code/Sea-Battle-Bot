@@ -1,6 +1,6 @@
 from aiogram.types import Message
 
-from app.storage import games, delete_game
+from app.state.in_memory import games
 from app.game_logic import print_board, process_shot, check_victory
 from app.db_utils.match import update_match_result
 from app.db_utils.stats import update_stats_after_match
