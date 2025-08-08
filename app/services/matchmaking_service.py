@@ -1,4 +1,5 @@
 from app.state.in_memory import user_game_requests, games
+from app.storage import create_game, join_game
 from app.db_utils.match import create_match
 from app.db_utils.player import get_or_create_player
 from app.dependencies import db_session
@@ -15,7 +16,6 @@ def try_create_game(user_id: int, username: str) -> str:
     :param username: Username пользователя.
     :return: ID созданной игры.
     """
-    from app.storage import create_game
     game_id = create_game(user_id, username)
     user_game_requests[user_id] = None  # пометка, что игрок создал игру и ждёт присоединения
     return game_id
@@ -47,7 +47,6 @@ def try_join_game(game_id: str, user_id: int, username: str) -> str | dict:
                 break
 
         # Присоединяем второго игрока
-        from app.storage import join_game
         if not join_game(game_id, user_id, username):
             return "not_found"
 

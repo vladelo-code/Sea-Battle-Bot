@@ -44,7 +44,7 @@ async def create_game_command(message: Message) -> None:
         # Запускаем таск автоудаления игры через 5 минут
         asyncio.create_task(remove_game_if_no_join(game_id))
 
-        await message.answer(STARTING_GAME.format(game_id=game_id), reply_markup=connect_menu())
+        await message.answer(STARTING_GAME.format(game_id=game_id), reply_markup=connect_menu(), parse_mode="html")
     else:
         logger.warning(f"⚠️ Игрок @{username} пытался создать ещё игру, не закончив предыдущую.")
         await message.answer(STARTING_GAME_ERROR)
@@ -88,7 +88,7 @@ async def join_game_command(message: Message) -> None:
         user_game_requests.pop(user_id, None)
         player1 = result["player1"]
         player2 = result["player2"]
-        second_player_username = games[game_id]["usernames"].get(player2)
+        second_player_username = games[game_id]["usernames"].get(player1)
 
         logger.info(f"➕ Игрок @{username} присоединился к игре, ID игры: {game_id}")
         await message.answer(SUCCESSFULLY_JOINED.format(game_id=game_id))

@@ -54,13 +54,13 @@ async def handle_surrender(message: Message) -> None:
     second_player_username = games[game_id]["usernames"].get(player2)
 
     logger.info(f'🏳️ Игрок @{username} сдался, ID игры: {game_id}')
-    logger.info(f'🏳️ Игрок @{second_player_username} выиграл, ID игры: {game_id}')
+    logger.info(f'🎉️ Игрок @{second_player_username} выиграл, ID игры: {game_id}')
 
     # Удаляем игру и все связи
     games.pop(game_id, None)
 
-    await message.bot.send_message(user_id, LOSER_SUR.format(username=username), reply_markup=main_menu())
-    await message.bot.send_message(opponent_id, WINNER_SUR.format(username=second_player_username),
+    await message.bot.send_message(user_id, LOSER_SUR.format(username=second_player_username), reply_markup=main_menu())
+    await message.bot.send_message(opponent_id, WINNER_SUR.format(username=username),
                                    reply_markup=main_menu())
 
 
@@ -137,17 +137,18 @@ async def handle_shot(message: Message) -> None:
             reply_markup=enemy_board_keyboard(game_id, opponent_id)
         )
 
-        # Удаляем сообщение соперника
-        await message.bot.delete_message(
-            chat_id=opponent_id,
-            message_id=game.get("message_ids", {}).get(opponent_id, 0)
-        )
         # Отправляем новое сообщение сопернику
         msg2 = await message.bot.send_message(
             chat_id=opponent_id,
             text=YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT.format(board=print_board(board)),
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, user_id)
+        )
+
+        # Удаляем сообщение соперника
+        await message.bot.delete_message(
+            chat_id=opponent_id,
+            message_id=game.get("message_ids", {}).get(opponent_id, 0)
         )
 
     else:
@@ -162,17 +163,18 @@ async def handle_shot(message: Message) -> None:
             reply_markup=enemy_board_keyboard(game_id, opponent_id)
         )
 
-        # Удаляем сообщение соперника
-        await message.bot.delete_message(
-            chat_id=opponent_id,
-            message_id=game.get("message_ids", {}).get(opponent_id, 0)
-        )
         # Отправляем новое сообщение сопернику
         msg2 = await message.bot.send_message(
             chat_id=opponent_id,
             text=YOUR_BOARD_TEXT_AFTER_BAD_SHOT.format(board=print_board(board)),
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, user_id)
+        )
+
+        # Удаляем сообщение соперника
+        await message.bot.delete_message(
+            chat_id=opponent_id,
+            message_id=game.get("message_ids", {}).get(opponent_id, 0)
         )
 
     # Обновляем message_ids в игре
