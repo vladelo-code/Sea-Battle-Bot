@@ -1,9 +1,25 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
+
 from app.models.player import Player
 
 
 def get_or_create_player(db: Session, telegram_id: str, username: str | None = None) -> Player:
+    """
+    Получает игрока по Telegram ID или создает нового, если он не существует.
+
+    Если игрок найден:
+      - обновляется время последнего появления (last_seen)
+      - обновляется username, если он изменился
+
+    Если игрок не найден:
+      - создается новый игрок с текущим временем регистрации и последнего появления
+
+    :param db: Сессия SQLAlchemy.
+    :param telegram_id: Telegram ID пользователя.
+    :param username: Username пользователя (может быть None).
+    :return: Объект Player.
+    """
     player = db.query(Player).filter(Player.telegram_id == telegram_id).first()
 
     if player:
@@ -28,4 +44,11 @@ def get_or_create_player(db: Session, telegram_id: str, username: str | None = N
 
 
 def get_player_by_telegram_id(db: Session, telegram_id: str) -> Player | None:
+    """
+    Получает игрока по его Telegram ID.
+
+    :param db: Сессия SQLAlchemy.
+    :param telegram_id: Telegram ID пользователя.
+    :return: Объект Player, если найден, иначе None.
+    """
     return db.query(Player).filter(Player.telegram_id == telegram_id).first()
