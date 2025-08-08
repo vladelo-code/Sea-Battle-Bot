@@ -10,7 +10,8 @@ from app.keyboards import main_menu, enemy_board_keyboard
 from app.logger import setup_logger
 
 from app.messages.texts import (
-    YOUR_BOARD_TEXT_AFTER_SHOT
+    GAME_NOT_FOUND, LOSER_SUR, WINNER_SUR, NOT_YOUR_TURN, BAD_COORDINATES, WINNER, LOSER,
+    SUCCESSFUL_SHOT, YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT, BAD_SHOT, YOUR_BOARD_TEXT_AFTER_BAD_SHOT
 )
 
 logger = setup_logger(__name__)
@@ -38,7 +39,7 @@ async def handle_surrender(message: Message) -> None:
             break
 
     if not game_id or game_id not in games:
-        await message.answer("❗ Игра не найдена.")
+        await message.answer(GAME_NOT_FOUND.format(game_id=game_id))
         return
 
     game = games[game_id]
@@ -46,17 +47,21 @@ async def handle_surrender(message: Message) -> None:
     player2 = game["player2"]
     opponent_id = player2 if user_id == player1 else player1
 
-    logger.info(f'🏳️ Игрок @{username} сдался, ID игры: {game_id}')
-
     with db_session() as db:
         update_match_result(db, game_id, winner_id=opponent_id, result="surrender")
         update_stats_after_match(db, winner_id=opponent_id, loser_id=user_id)
 
+    second_player_username = games[game_id]["usernames"].get(player2)
+
+    logger.info(f'🏳️ Игрок @{username} сдался, ID игры: {game_id}')
+    logger.info(f'🏳️ Игрок @{second_player_username} выиграл, ID игры: {game_id}')
+
     # Удаляем игру и все связи
     games.pop(game_id, None)
 
-    await message.bot.send_message(user_id, "🏳️ Поражение! Вы сдались в игре!", reply_markup=main_menu())
-    await message.bot.send_message(opponent_id, "🎉 Победа! Противник сдался!", reply_markup=main_menu())
+    await message.bot.send_message(user_id, LOSER_SUR.format(username=username), reply_markup=main_menu())
+    await message.bot.send_message(opponent_id, WINNER_SUR.format(username=second_player_username),
+                                   reply_markup=main_menu())
 
 
 async def handle_shot(message: Message) -> None:
@@ -83,13 +88,13 @@ async def handle_shot(message: Message) -> None:
             break
 
     if not game_id or game_id not in games:
-        await message.answer("❗ Игра не найдена.")
+        await message.answer(GAME_NOT_FOUND.format(game_id=game_id))
         return
 
     game = games[game_id]
 
     if user_id != game["turn"]:
-        await message.answer("❗ Сейчас не ваш ход.")
+        await message.answer(NOT_YOUR_TURN)
         return
 
     try:
@@ -99,7 +104,7 @@ async def handle_shot(message: Message) -> None:
         if not (0 <= x < 10 and 0 <= y < 10):
             raise ValueError
     except Exception:
-        await message.answer("❗ Неверные координаты. Используйте формат A1.")
+        await message.answer(BAD_COORDINATES)
         return
 
     opponent_id = game["player1"] if game["turn"] == game["player2"] else game["player2"]
@@ -111,12 +116,14 @@ async def handle_shot(message: Message) -> None:
             update_match_result(db, game_id, winner_id=user_id, result="normal")
             update_stats_after_match(db, winner_id=user_id, loser_id=opponent_id)
 
+        second_player_username = games[game_id]["usernames"].get(opponent_id)
+
         games.pop(game_id, None)
 
-        await message.answer("🎉 Победа! Вы уничтожили все корабли противника!", reply_markup=main_menu())
+        await message.answer(WINNER.format(username=username), reply_markup=main_menu())
         await message.bot.send_message(
             opponent_id,
-            f"💥 Поражение! Все ваши корабли уничтожены.\nПобедил @{username}!",
+            LOSER.format(username=second_player_username),
             reply_markup=main_menu()
         )
         return
@@ -125,7 +132,7 @@ async def handle_shot(message: Message) -> None:
         # Отправляем новое сообщение стрелявшему
         msg1 = await message.bot.send_message(
             chat_id=user_id,
-            text="💥 <b>Попадание!</b> Стреляйте ещё!",
+            text=SUCCESSFUL_SHOT,
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, opponent_id)
         )
@@ -138,8 +145,7 @@ async def handle_shot(message: Message) -> None:
         # Отправляем новое сообщение сопернику
         msg2 = await message.bot.send_message(
             chat_id=opponent_id,
-            text="🔥 <b>По вам попали!</b>\n" + YOUR_BOARD_TEXT_AFTER_SHOT.format(
-                board=print_board(board)) + "\n⏳ <b>Ожидайте ход соперника!</b>",
+            text=YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT.format(board=print_board(board)),
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, user_id)
         )
@@ -151,7 +157,7 @@ async def handle_shot(message: Message) -> None:
         # Отправляем новое сообщение стрелявшему
         msg1 = await message.bot.send_message(
             chat_id=user_id,
-            text="❌ <b>Мимо!</b> Теперь ходит другой игрок",
+            text=BAD_SHOT,
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, opponent_id)
         )
@@ -164,7 +170,7 @@ async def handle_shot(message: Message) -> None:
         # Отправляем новое сообщение сопернику
         msg2 = await message.bot.send_message(
             chat_id=opponent_id,
-            text=YOUR_BOARD_TEXT_AFTER_SHOT.format(board=print_board(board)) + "\n🎯 <b>Ваш ход!</b>",
+            text=YOUR_BOARD_TEXT_AFTER_BAD_SHOT.format(board=print_board(board)),
             parse_mode="html",
             reply_markup=enemy_board_keyboard(game_id, user_id)
         )
