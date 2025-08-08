@@ -3,7 +3,6 @@ from aiogram import Bot, Dispatcher
 
 from app.handlers.register import register_handlers
 from app.logger import setup_logger
-
 from app.config import BOT_TOKEN
 
 # Инициализация логгера
@@ -18,7 +17,7 @@ register_handlers(dp)
 
 
 async def main():
-    logger.info("✅ Sea-Battle-Bot запущен!")
+    logger.info("✅ Морской Бой Бот запущен!")
     await dp.start_polling(bot)
 
 
