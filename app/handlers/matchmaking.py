@@ -70,14 +70,34 @@ async def join_game_command(message: Message):
 
         logger.info(PLAYER_JOINED_GAME.format(username=username, game_id=game_id))
         await message.answer(SUCCESSFULLY_JOINED.format(game_id=game_id))
-        await message.bot.send_message(player1, PLAYER1_GAME_START, reply_markup=ReplyKeyboardRemove())
-        await message.bot.send_message(player2, PLAYER2_GAME_START, reply_markup=ReplyKeyboardRemove())
-        await message.bot.send_message(player1,
-                                       YOUR_BOARD_TEXT.format(board=print_board(get_board(game_id, player1))),
-                                       parse_mode="html", reply_markup=playing_menu(game_id, player2))
-        await message.bot.send_message(player2,
-                                       YOUR_BOARD_TEXT.format(board=print_board(get_board(game_id, player2))),
-                                       parse_mode="html")
+        await message.bot.send_message(player1, PLAYER1_GAME_START.format(username=username),
+                                       reply_markup=ReplyKeyboardRemove())
+        await message.bot.send_message(player2, PLAYER2_GAME_START.format(username='XXXXXX'), reply_markup=ReplyKeyboardRemove())
+
+        # Отправляем сообщение игроку 1 и сохраняем message_id
+        msg1 = await message.bot.send_message(
+            player1,
+            YOUR_BOARD_TEXT.format(board=print_board(get_board(game_id, player1))),
+            parse_mode="html",
+            reply_markup=playing_menu(game_id, player2)
+        )
+
+        # Отправляем сообщение игроку 2 и сохраняем message_id
+        msg2 = await message.bot.send_message(
+            player2,
+            YOUR_BOARD_TEXT.format(board=print_board(get_board(game_id, player2))),
+            parse_mode="html",
+            reply_markup=playing_menu(game_id, player1)
+        )
+
+        # Сохраняем ID сообщений в память (или БД)
+        if game_id not in current_games:
+            current_games[game_id] = {}
+
+        current_games[game_id]["message_ids"] = {
+            player1: msg1.message_id,
+            player2: msg2.message_id,
+        }
 
 
 def register_handler(dp: Dispatcher):
