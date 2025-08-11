@@ -261,11 +261,11 @@ Sea-Battle-Bot/
 
 1. 🗃️ Клонируйте репозиторий:
    ```bash
-   git clone https://github.com/vladelo777/sea-battle-bot.git
+   git clone https://github.com/vladelo777/Sea-Battle-Bot.git
    ```
 2. 📂 Перейдите в папку проекта:
    ```bash
-   cd sea-battle-bot
+   cd Sea-Battle-Bot
    ```
 3. 📦 Установите зависимости:
    ```bash
@@ -288,11 +288,11 @@ Sea-Battle-Bot/
 
 1. Клонируйте репозиторий:
    ```bash
-   git clone https://github.com/vladelo777/sea-battle-bot.git
+   git clone https://github.com/vladelo777/Sea-Battle-Bot.git
    ```
 2. Перейдите в папку проекта:
    ```bash
-   cd sea-battle-bot
+   cd Sea-Battle-Bot
    ```
 3. Создайте `.env` на основе `.env.template` и укажите ваш токен:
    ```bash
