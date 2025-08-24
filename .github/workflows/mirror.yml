@@ -1,0 +1,22 @@
+name: Mirror to Gitverse
+
+on:
+  push:
+    branches: ["*"]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mirror to Gitverse
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+
+          git remote add gitverse https://oauth2:${{ secrets.GITVERSE_TOKEN }}@gitverse.ru/vladelo/Sea-Battle-Bot.git
+          git push --mirror gitverse
