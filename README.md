@@ -261,7 +261,7 @@ Sea-Battle-Bot/
 
 1. 🗃️ Клонируйте репозиторий:
    ```bash
-   git clone https://github.com/vladelo777/Sea-Battle-Bot.git
+   git clone https://github.com/vladelo-code/Sea-Battle-Bot.git
    ```
 2. 📂 Перейдите в папку проекта:
    ```bash
@@ -288,7 +288,7 @@ Sea-Battle-Bot/
 
 1. Клонируйте репозиторий:
    ```bash
-   git clone https://github.com/vladelo777/Sea-Battle-Bot.git
+   git clone https://github.com/vladelo-code/Sea-Battle-Bot.git
    ```
 2. Перейдите в папку проекта:
    ```bash
