@@ -385,6 +385,7 @@ Sea-Battle-Bot/
 
 Автор: Владислав Лахтионов  
 GitHub: [vladelo-code](https://github.com/vladelo-code)  
+Gitverse: [vladelo](https://gitverse.ru/vladelo/Song-Hunter-Bot)  
 Telegram: [@vladelo](https://t.me/vladelo)
 
 💌 Не забудьте поставить звезду ⭐ на GitHub, если вам понравился бот! 😉
