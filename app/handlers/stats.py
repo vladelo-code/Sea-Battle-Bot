@@ -15,6 +15,7 @@ from app.messages.texts import (
     EMPTY_LEADERBOARD_MESSAGE,
     LEADERBOARD_HEADER,
     LEADERBOARD_ROW,
+    LEADERBOARD_FOOTER,
     UNKNOWN_USERNAME_FIRST,
     ELO_INFO,
 )
@@ -63,7 +64,7 @@ async def leaderboard_command(message: Message) -> None:
     """
     username = message.from_user.username
     with db_session() as db:
-        top_players = get_top_players(db)
+        top_players, total_players = get_top_players(db)
 
         if not top_players:
             logger.info(f"🥇 Игрок @{username} пытался получить рейтинг, но он пуст.")
@@ -74,6 +75,8 @@ async def leaderboard_command(message: Message) -> None:
         for i, (player_username, rating) in enumerate(top_players, 1):
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
+
+        text += LEADERBOARD_FOOTER.format(total_players=total_players)
 
         logger.info(f"🥇 Игрок @{username} получил рейтинг игроков.")
         await message.answer(text, parse_mode='html', reply_markup=rating_menu())

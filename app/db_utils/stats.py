@@ -1,5 +1,3 @@
-from typing import Any
-from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
 from app.models.player_stats import PlayerStats
@@ -66,13 +64,13 @@ def get_stats(db: Session, player_id: int) -> PlayerStats | None:
     return db.query(PlayerStats).filter_by(player_id=player_id).first()
 
 
-def get_top_players(db: Session, limit: int = 10) -> list[Row[tuple[Any, Any]]]:
+def get_top_players(db: Session, limit: int = 10):
     """
-    Возвращает список топ игроков по рейтингу.
+    Возвращает список топ игроков по рейтингу и общее количество игроков.
 
     :param db: Сессия SQLAlchemy.
     :param limit: Количество лучших игроков в выдаче (по умолчанию 10).
-    :return: Список кортежей (username, рейтинг), отсортированных по убыванию рейтинга.
+    :return: (список игроков, общее количество игроков)
     """
     results = (
         db.query(Player.username, PlayerStats.rating)
@@ -81,4 +79,7 @@ def get_top_players(db: Session, limit: int = 10) -> list[Row[tuple[Any, Any]]]:
         .limit(limit)
         .all()
     )
-    return results
+
+    total_players = db.query(PlayerStats).count()
+
+    return results, total_players

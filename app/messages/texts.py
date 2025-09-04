@@ -82,8 +82,9 @@ NOT_REGISTERED_MESSAGE = "❗ Вы ещё не зарегистрированы 
 # Сообщения лидерборда
 # ====================
 EMPTY_LEADERBOARD_MESSAGE = "😔 Рейтинг пока пуст."
-LEADERBOARD_HEADER = "🥇 Топ игроков по рейтингу:\n\n"
+LEADERBOARD_HEADER = "<b>🥇 Топ игроков по рейтингу:</b>\n\n"
 LEADERBOARD_ROW = "{index}. {username} — <tg-spoiler>{rating}</tg-spoiler> 🏆\n"
+LEADERBOARD_FOOTER = "\n<b>Всего игроков: </b>{total_players}"
 UNKNOWN_USERNAME_FIRST = "Призрачный юнга"
 UNKNOWN_USERNAME_SECOND = "Великий капитан"
 
