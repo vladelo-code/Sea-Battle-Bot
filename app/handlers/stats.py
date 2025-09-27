@@ -1,9 +1,9 @@
 from aiogram import Dispatcher
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 
-from app.keyboards import main_menu, rating_menu
+from app.keyboards import main_menu, rating_menu, back_to_main_menu
 from app.logger import setup_logger
-from app.db_utils.stats import get_stats, get_top_and_bottom_players
+from app.db_utils.stats import get_top_and_bottom_players
 from app.db_utils.player import get_player_by_telegram_id, get_extended_stats
 from app.dependencies import db_session
 
@@ -22,29 +22,34 @@ from app.messages.texts import (
 logger = setup_logger(__name__)
 
 
-async def stats_command(message: Message) -> None:
+async def stats_callback(callback: CallbackQuery) -> None:
     """
-    Обрабатывает команду показа статистики игрока.
+    Обрабатывает callback-запрос показа статистики игрока.
     Проверяет регистрацию и наличие статистики, отправляет результат или соответствующее сообщение.
 
-    :param message: Сообщение от пользователя Message.
+    :param callback: Callback-запрос от пользователя.
     """
-    username = message.from_user.username
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    username = callback.from_user.username
     with db_session() as db:
-        player = get_player_by_telegram_id(db, str(message.from_user.id))
+        player = get_player_by_telegram_id(db, str(callback.from_user.id))
         if not player:
             logger.info(f"📊 Игрок @{username} пытался получить статистику, будучи не авторизованным.")
-            await message.answer(NOT_REGISTERED_MESSAGE)
+            await callback.message.edit_text(NOT_REGISTERED_MESSAGE, reply_markup=back_to_main_menu())
             return
 
-        stats = get_extended_stats(db, str(message.from_user.id))
+        stats = get_extended_stats(db, str(callback.from_user.id))
         if not stats:
             logger.info(f"📊 Игрок @{username} пытался получить статистику, ни разу не сыграв.")
-            await message.answer(NO_STATS_MESSAGE)
+            await callback.message.edit_text(NO_STATS_MESSAGE, reply_markup=back_to_main_menu())
             return
 
         logger.info(f"📊 Игрок @{username} получил свою статистику.")
-        await message.answer(
+        await callback.message.edit_text(
             STATS_HEADER + STATS_TEMPLATE.format(
                 games_played=stats["games_played"],
                 wins=stats["wins"],
@@ -58,51 +63,74 @@ async def stats_command(message: Message) -> None:
                 total_time=int(stats["total_time"] // 60),
             ),
             parse_mode='HTML',
+            reply_markup=back_to_main_menu()
         )
 
 
-async def leaderboard_command(message: Message) -> None:
+async def leaderboard_callback(callback: CallbackQuery) -> None:
     """
-    Обрабатывает команду показа топ-лидера рейтинга.
+    Обрабатывает callback-запрос показа топ-лидера рейтинга.
     Получает топ игроков из БД и формирует сообщение с рейтингом.
+    Если текущий пользователь не входит в топ, показывает его позицию.
 
-    :param message: Сообщение от пользователя Message.
+    :param callback: Callback-запрос от пользователя.
     """
-    username = message.from_user.username
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    username = callback.from_user.username
     with db_session() as db:
-        top_players, bottom_players, total_players = get_top_and_bottom_players(db)
+        top_players, bottom_players, total_players, current_user_position = get_top_and_bottom_players(
+            db, current_user_id=str(callback.from_user.id)
+        )
 
         if not top_players:
             logger.info(f"🥇 Игрок @{username} пытался получить рейтинг, но он пуст.")
-            await message.answer(EMPTY_LEADERBOARD_MESSAGE)
+            await callback.message.edit_text(EMPTY_LEADERBOARD_MESSAGE, reply_markup=back_to_main_menu())
             return
 
         text = LEADERBOARD_HEADER
-        for i, (player_username, rating) in enumerate(top_players, 1):
+        for i, (player_username, rating, _) in enumerate(top_players, 1):
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
 
-        text += "...\n"
+        # Если пользователь не в топе, добавляем его позицию
+        if current_user_position:
+            user_username, user_rating, user_position = current_user_position
+            name = f"@{user_username}" if user_username else UNKNOWN_USERNAME_FIRST
+            text += "...\n"
+            text += LEADERBOARD_ROW.format(index=user_position, username=name, rating=user_rating)
+            text += "...\n"
+        else:
+            text += "...\n"
+
         start_index = total_players - len(bottom_players) + 1
-        for i, (player_username, rating) in enumerate(bottom_players, start_index):
+        for i, (player_username, rating, _) in enumerate(bottom_players, start_index):
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
 
         # text += LEADERBOARD_FOOTER.format(total_players=total_players)
 
         logger.info(f"🥇 Игрок @{username} получил рейтинг игроков.")
-        await message.answer(text, parse_mode='html', reply_markup=rating_menu())
+        await callback.message.edit_text(text, parse_mode='html', reply_markup=rating_menu())
 
 
-async def get_elo_explanation(message: Message) -> None:
+async def get_elo_explanation_callback(callback: CallbackQuery) -> None:
     """
-    Обрабатывает команду показа информации о рейтинговой системе Elo.
+    Обрабатывает callback-запрос показа информации о рейтинговой системе Elo.
 
-    :param message: Сообщение от пользователя Message.
+    :param callback: Callback-запрос от пользователя.
     """
-    username = message.from_user.username
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    username = callback.from_user.username
     logger.info(f"ℹ️ Игрок @{username} посмотрел правила начисления рейтинга.")
-    await message.answer(ELO_INFO, parse_mode="html", reply_markup=main_menu())
+    await callback.message.edit_text(ELO_INFO, parse_mode="html", reply_markup=back_to_main_menu())
 
 
 def register_handler(dp: Dispatcher) -> None:
@@ -111,11 +139,7 @@ def register_handler(dp: Dispatcher) -> None:
 
     :param dp: Экземпляр Dispatcher из aiogram.
     """
-    # Вызываем функцию получения статистики '👤 Мой профиль'
-    dp.message.register(stats_command, lambda message: message.text == "👤 Мой профиль")
-
-    # Вызываем функцию получения рейтинга '🥇 Рейтинг'
-    dp.message.register(leaderboard_command, lambda message: message.text == "🥇 Рейтинг")
-
-    # Вызываем функцию получения информации о рейтинге 'ℹ️ О рейтинге'
-    dp.message.register(get_elo_explanation, lambda message: message.text == "ℹ️ О рейтинге")
+    # Callback-обработчики для inline-кнопок
+    dp.callback_query.register(stats_callback, lambda c: c.data == "my_profile")
+    dp.callback_query.register(leaderboard_callback, lambda c: c.data == "rating")
+    dp.callback_query.register(get_elo_explanation_callback, lambda c: c.data == "about_rating")
