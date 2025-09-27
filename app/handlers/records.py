@@ -83,11 +83,10 @@ async def show_records_callback(callback: CallbackQuery) -> None:
                         ended_at = match.ended_at
                     
                     duration_seconds = (ended_at - started_at).total_seconds()
-                    fastest_time = format_duration(duration_seconds)
                     fastest_date = ended_at.strftime("%d.%m.%Y в %H:%M")
                     
                     records_text += f"⚡ <b>Самая быстрая игра:</b>\n"
-                    records_text += f"⏱️ Время: {fastest_time}\n"
+                    records_text += f"⏱️ Время: {int(duration_seconds)} сек.\n"
                     records_text += f"📅 Дата: {fastest_date}\n"
                     records_text += f"👥 Игроки: @{player1} vs @{player2}\n\n"
                 except (ValueError, TypeError) as e:
