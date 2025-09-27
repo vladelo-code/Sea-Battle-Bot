@@ -58,7 +58,7 @@ async def stats_callback(callback: CallbackQuery) -> None:
                 place=stats["place"],
                 total_players=stats["total_players"],
                 first_seen=stats["first_seen"].strftime("%d.%m.%Y"),
-                last_seen=stats["last_seen"].strftime("%d.%m.%Y"),
+                # last_seen=stats["last_seen"].strftime("%d.%m.%Y"),
                 avg_time=int(stats["avg_time"] // 60),
                 total_time=int(stats["total_time"] // 60),
             ),
