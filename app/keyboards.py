@@ -16,7 +16,8 @@ def main_menu() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
             [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
             [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
-            [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")]
+            [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")],
+            [InlineKeyboardButton(text="🎖️ Рекорды игры", callback_data="show_records")]
         ]
     )
     return keyboard

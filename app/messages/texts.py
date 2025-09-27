@@ -119,6 +119,32 @@ ELO_INFO = (
     "🔁 Пересчёт происходит <b>после каждой завершённой игры</b>."
 )
 
+# ====================
+# Сообщения рекордов
+# ====================
+GAME_RECORDS_HEADER = "🏆 <b>Рекорды игры:</b>\n\n"
+
+GAME_RECORDS_TEMPLATE = """⚡ <b>Самая быстрая игра:</b>
+⏱️ Время: {fastest_time}
+📅 Дата: {fastest_date}
+👥 Игроки: @{player1} vs @{player2}
+
+🔥 <b>Самый долгий стрик побед:</b>
+🏆 @{win_streak_player} — {win_streak_count} побед подряд
+
+💥 <b>Самый долгий стрик поражений:</b>
+😔 @{loss_streak_player} — {loss_streak_count} поражений подряд
+
+🎮 <b>Самый играющий игрок (по количеству игр):</b>
+📊 @{most_games_player} — {most_games_count} игр
+
+⏰ <b>Самый играющий игрок (по времени):</b>
+🕐 @{most_time_player} — {most_time_minutes:.1f} минут
+
+{no_records_message}"""
+
+NO_RECORDS_MESSAGE = "😔 Пока нет рекордов. Сыграйте первым!"
+
 # ======================
 # Правила игры
 # ======================
