@@ -41,12 +41,16 @@ def try_join_game(game_id: str, user_id: int, username: str) -> str | dict:
         if user_id == game["player1"]:
             return "same_game"
 
-        # Если игрок уже в другой игре — удаляем ту игру
+        # Проверяем, не играет ли игрок в активной игре (игра началась, есть 2 игрока)
         for gid, g in list(games.items()):
             if user_id == g.get("player1") or user_id == g.get("player2"):
-                # Удаляем игру, в которой игрок участвует
-                games.pop(gid, None)
-                break
+                # Если игра активна (есть 2 игрока), блокируем присоединение
+                if g.get("player1") and g.get("player2"):
+                    return "already_in_active_game"
+                # Если игра неактивна (только создатель ждет), удаляем её
+                else:
+                    games.pop(gid, None)
+                    break
 
         # Присоединяем второго игрока
         if not join_game(game_id, user_id, username):

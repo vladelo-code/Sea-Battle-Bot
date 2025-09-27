@@ -115,6 +115,7 @@ def rating_menu() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="ℹ️ О рейтинге", callback_data="about_rating")],
+            [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
             [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )

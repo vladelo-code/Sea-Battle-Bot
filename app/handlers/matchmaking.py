@@ -1,5 +1,5 @@
 from aiogram import Dispatcher
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 import asyncio
 
 from app.services.matchmaking_service import try_create_game, try_join_game
@@ -52,7 +52,7 @@ async def create_game_callback(callback: CallbackQuery) -> None:
         games[game_id]["creation_message_id"] = callback.message.message_id
     else:
         logger.warning(f"⚠️ Игрок @{username} пытался создать ещё игру, не закончив предыдущую.")
-        await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=main_menu())
+        await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
 
 
 async def join_game_callback(callback: CallbackQuery) -> None:
@@ -63,8 +63,25 @@ async def join_game_callback(callback: CallbackQuery) -> None:
     :param callback: Объект callback-запроса от пользователя.
     """
     await callback.answer()
-    user_game_requests[callback.from_user.id] = None
-    await callback.message.edit_text(CHOOSE_CONNECTING_GAME, reply_markup=current_game_menu())
+    user_id = callback.from_user.id
+    username = callback.from_user.username
+
+    # Проверяем, не играет ли игрок в активной игре (игра началась, есть 2 игрока)
+    active_game = None
+    for gid, g in games.items():
+        if user_id == g.get("player1") or user_id == g.get("player2"):
+            # Если игра активна (есть 2 игрока), блокируем присоединение
+            if g.get("player1") and g.get("player2"):
+                active_game = gid
+                break
+
+    if active_game:
+        logger.warning(
+            f"⚠️ Игрок @{username} пытался присоединиться к игре, уже участвуя в активной игре {active_game}.")
+        await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+    else:
+        user_game_requests[user_id] = None
+        await callback.message.edit_text(CHOOSE_CONNECTING_GAME, reply_markup=current_game_menu())
 
 
 async def join_game_by_id_callback(callback: CallbackQuery) -> None:
@@ -87,6 +104,11 @@ async def join_game_by_id_callback(callback: CallbackQuery) -> None:
 
     elif result == "not_found":
         await callback.message.edit_text(GAME_NOT_FOUND.format(game_id=game_id), reply_markup=main_menu())
+
+    elif result == "already_in_active_game":
+        logger.warning(f"⚠️ Игрок @{username} пытался присоединиться к игре, уже участвуя в активной игре.")
+        await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+
 
     elif result == "invalid":
         await callback.message.edit_text(INVALID_GAME_DATA, reply_markup=main_menu())
