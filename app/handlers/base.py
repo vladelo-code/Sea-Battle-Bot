@@ -36,7 +36,10 @@ async def show_rules_callback(callback: CallbackQuery) -> None:
     :param callback: Объект callback-запроса от пользователя.
     """
     logger.info(f"🚓 Игрок @{callback.from_user.username} запросил правила игры!")
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
     await callback.message.edit_text(GAME_RULES, parse_mode="HTML", reply_markup=back_to_main_menu())
 
 
@@ -50,7 +53,10 @@ async def main_menu_callback(callback: CallbackQuery) -> None:
     """
     logger.info(f"👋 Игрок @{callback.from_user.username} вернулся в главное меню!")
 
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
 
     with db_session() as db:
         register_or_update_player(db, telegram_id=str(callback.from_user.id), username=callback.from_user.username)

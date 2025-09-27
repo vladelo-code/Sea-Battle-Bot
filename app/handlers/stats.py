@@ -29,7 +29,11 @@ async def stats_callback(callback: CallbackQuery) -> None:
 
     :param callback: Callback-запрос от пользователя.
     """
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
     username = callback.from_user.username
     with db_session() as db:
         player = get_player_by_telegram_id(db, str(callback.from_user.id))
@@ -71,7 +75,11 @@ async def leaderboard_callback(callback: CallbackQuery) -> None:
 
     :param callback: Callback-запрос от пользователя.
     """
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
     username = callback.from_user.username
     with db_session() as db:
         top_players, bottom_players, total_players, current_user_position = get_top_and_bottom_players(
@@ -115,7 +123,11 @@ async def get_elo_explanation_callback(callback: CallbackQuery) -> None:
 
     :param callback: Callback-запрос от пользователя.
     """
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
     username = callback.from_user.username
     logger.info(f"ℹ️ Игрок @{username} посмотрел правила начисления рейтинга.")
     await callback.message.edit_text(ELO_INFO, parse_mode="html", reply_markup=back_to_main_menu())

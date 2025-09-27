@@ -26,7 +26,11 @@ async def create_game_callback(callback: CallbackQuery) -> None:
 
     :param callback: Объект callback-запроса от пользователя.
     """
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
     user_id = callback.from_user.id
     username = callback.from_user.username
 
@@ -62,7 +66,11 @@ async def join_game_callback(callback: CallbackQuery) -> None:
 
     :param callback: Объект callback-запроса от пользователя.
     """
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
     user_id = callback.from_user.id
     username = callback.from_user.username
 
@@ -91,7 +99,11 @@ async def join_game_by_id_callback(callback: CallbackQuery) -> None:
 
     :param callback: Объект callback-запроса от пользователя.
     """
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
     user_id = callback.from_user.id
     username = callback.from_user.username
     game_id = callback.data.replace("join_game_", "")
