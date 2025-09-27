@@ -1,40 +1,38 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from app.storage import games
 
 
-def main_menu() -> ReplyKeyboardMarkup:
+def main_menu() -> InlineKeyboardMarkup:
     """
-    Создает клавиатуру главного меню с основными командами:
+    Создает inline-клавиатуру главного меню с основными командами:
     - Новая игра
     - Присоединиться к игре
     - Мой профиль
     - Рейтинг
     """
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="🚀 Новая игра")],
-            [KeyboardButton(text="📎 Присоединиться к игре")],
-            [KeyboardButton(text="🚓 Правила игры")],
-            [KeyboardButton(text="👤 Мой профиль")],
-            [KeyboardButton(text="🥇 Рейтинг")]
-        ],
-        resize_keyboard=True
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
+            [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+            [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
+            [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
+            [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")]
+        ]
     )
     return keyboard
 
 
-def connect_menu() -> ReplyKeyboardMarkup:
+def connect_menu() -> InlineKeyboardMarkup:
     """
-    Создает клавиатуру для меню подключения к игре:
+    Создает inline-клавиатуру для меню подключения к игре:
     - Присоединиться к игре
     - Главное меню
     """
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="📎 Присоединиться к игре")],
-            [KeyboardButton(text="🏠 Главное меню")]
-        ],
-        resize_keyboard=True
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+        ]
     )
     return keyboard
 
@@ -64,38 +62,55 @@ def playing_menu(game_id: str, player_id: int) -> ReplyKeyboardMarkup:
     return keyboard
 
 
-def current_game_menu() -> ReplyKeyboardMarkup:
+def current_game_menu() -> InlineKeyboardMarkup:
     """
-    Создает клавиатуру со списком всех активных игр.
+    Создает inline-клавиатуру со списком всех активных игр.
     Добавляет кнопки:
     - Новая игра
     - Обновить список игр
     - Главное меню
     """
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=f"{game}") for game in games],
-            [KeyboardButton(text="🚀 Новая игра")],
-            [KeyboardButton(text="🔃 Обновить список игр")],
-            [KeyboardButton(text="🏠 Главное меню")]
-        ],
-        resize_keyboard=True
+    keyboard_buttons = []
+    
+    # Добавляем кнопки с ID игр
+    for game in games:
+        keyboard_buttons.append([InlineKeyboardButton(text=f"{game}", callback_data=f"join_game_{game}")])
+    
+    # Добавляем навигационные кнопки
+    keyboard_buttons.extend([
+        [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
+        [InlineKeyboardButton(text="🔃 Обновить список игр", callback_data="refresh_games")],
+        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+    ])
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+    return keyboard
+
+
+def rating_menu() -> InlineKeyboardMarkup:
+    """
+    Создает inline-клавиатуру меню рейтинга с кнопками:
+    - О рейтинге
+    - Главное меню
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="ℹ️ О рейтинге", callback_data="about_rating")],
+            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+        ]
     )
     return keyboard
 
 
-def rating_menu() -> ReplyKeyboardMarkup:
+def back_to_main_menu() -> InlineKeyboardMarkup:
     """
-    Создает клавиатуру меню рейтинга с кнопками:
-    - О рейтинге
-    - Главное меню
+    Создает простую inline-клавиатуру с кнопкой возврата в главное меню.
+    Используется в различных местах, где нужна только эта кнопка.
     """
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="ℹ️ О рейтинге")],
-            [KeyboardButton(text="🏠 Главное меню")]
-        ],
-        resize_keyboard=True
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+        ]
     )
     return keyboard
 

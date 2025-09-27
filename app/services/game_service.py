@@ -1,4 +1,4 @@
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 from typing import Optional
 
 from app.state.in_memory import games
@@ -60,9 +60,29 @@ async def handle_surrender(message: Message) -> None:
     # Удаляем игру и все связи
     games.pop(game_id, None)
 
-    await message.bot.send_message(user_id, LOSER_SUR.format(username=winner_username), reply_markup=main_menu())
-    await message.bot.send_message(opponent_id, WINNER_SUR.format(username=loser_username),
-                                   reply_markup=main_menu())
+    await message.bot.send_message(
+        user_id,
+        LOSER_SUR.format(username=winner_username),
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+    await message.bot.send_message(
+        user_id,
+        "🌀 Выберите действие:",
+        reply_markup=main_menu()
+    )
+
+    # Для победителя
+    await message.bot.send_message(
+        opponent_id,
+        WINNER_SUR.format(username=loser_username),
+        reply_markup=ReplyKeyboardRemove()
+    )
+    await message.bot.send_message(
+        opponent_id,
+        "🌀 Выберите действие:",
+        reply_markup=main_menu()
+    )
 
 
 async def handle_shot(message: Message) -> None:
@@ -79,7 +99,7 @@ async def handle_shot(message: Message) -> None:
     :param message: Объект сообщения с координатами выстрела.
     """
     user_id = message.from_user.id
-    username = message.from_user.username
+    # username = message.from_user.username
 
     # Найдем игру, в которой играет user_id
     game_id: Optional[str] = None
