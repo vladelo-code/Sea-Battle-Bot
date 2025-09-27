@@ -2,3 +2,4 @@
 /.idea
 .env
 *.sqlite3
+*.log
