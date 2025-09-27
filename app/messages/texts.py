@@ -4,6 +4,7 @@
 START_MESSAGE = (
     "👋 <b>Привет! Добро пожаловать в Морской бой!</b>\n\n"
     "🚢 Создай новую игру и приглашай друга — или присоединяйся к уже созданной. Удачи в бою!\n\n"
+    "💬 <b>Новости бота:</b> @vladelo_sea_battle\n"
     "👨‍💻 <b>Разработчик:</b> @vladelo\n"
     "🌐 <b>GitHub проекта:</b> <a href='https://github.com/vladelo-code/Sea-Battle-Bot'>github.com</a>\n"
     "💰 <b>Поддержать автора:</b> <a href='https://tbank.ru/cf/8JRmpoiVcdS'>Т-Банк</a>"
