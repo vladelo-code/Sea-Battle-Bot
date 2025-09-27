@@ -1,6 +1,6 @@
 import asyncio
 from aiogram import Dispatcher
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 
 from app.keyboards import broadcast_menu, broadcast_confirm_menu, back_to_main_menu
@@ -186,7 +186,7 @@ async def send_broadcast_callback(callback: CallbackQuery) -> None:
                 text=f"{broadcast_message}\n\n"
                      f"🎮 <b>Начните играть командой /start</b>",
                 parse_mode="HTML",
-                reply_markup=None  # Очищаем все клавиатуры
+                reply_markup=ReplyKeyboardRemove()
             )
             successful_sends += 1
             
