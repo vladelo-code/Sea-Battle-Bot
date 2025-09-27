@@ -1,7 +1,11 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from datetime import datetime
 
 from app.models.player import Player
+from app.models.player_stats import PlayerStats
+from app.models.match import Match
+from app.db_utils.stats import get_stats
 
 
 def get_or_create_player(db: Session, telegram_id: str, username: str | None = None) -> Player:
@@ -52,3 +56,54 @@ def get_player_by_telegram_id(db: Session, telegram_id: str) -> Player | None:
     :return: Объект Player, если найден, иначе None.
     """
     return db.query(Player).filter(Player.telegram_id == telegram_id).first()
+
+
+def get_extended_stats(db: Session, telegram_id: str) -> dict | None:
+    """
+    Возвращает расширенную статистику игрока:
+    - количество игр, побед, поражений
+    - рейтинг и место в рейтинге
+    - дата регистрации и последнего визита
+    - среднее и суммарное время матчей
+    """
+    player = get_player_by_telegram_id(db, telegram_id)
+    stats = get_stats(db, int(telegram_id))
+    if not player or not stats:
+        return None
+
+    higher_count = (
+        db.query(func.count(PlayerStats.player_id))
+        .filter(PlayerStats.rating > stats.rating)
+        .scalar()
+    )
+    place = higher_count + 1
+    total_players = db.query(func.count(PlayerStats.player_id)).scalar()
+
+    matches = (
+        db.query(Match)
+        .filter((Match.player_1_id == player.telegram_id) | (Match.player_2_id == player.telegram_id))
+        .filter(Match.ended_at.isnot(None))
+        .all()
+    )
+
+    durations = [
+        (m.ended_at - m.started_at).total_seconds()
+        for m in matches
+        if m.started_at and m.ended_at
+    ]
+
+    total_time = sum(durations) if durations else 0
+    avg_time = total_time / len(durations) if durations else 0
+
+    return {
+        "games_played": stats.games_played,
+        "wins": stats.wins,
+        "losses": stats.losses,
+        "rating": stats.rating,
+        "place": place,
+        "total_players": total_players,
+        "first_seen": player.first_seen,
+        "last_seen": player.last_seen,
+        "avg_time": avg_time,
+        "total_time": total_time,
+    }

@@ -4,7 +4,7 @@ from aiogram.types import Message
 from app.keyboards import main_menu, rating_menu
 from app.logger import setup_logger
 from app.db_utils.stats import get_stats, get_top_and_bottom_players
-from app.db_utils.player import get_player_by_telegram_id
+from app.db_utils.player import get_player_by_telegram_id, get_extended_stats
 from app.dependencies import db_session
 
 from app.messages.texts import (
@@ -37,7 +37,7 @@ async def stats_command(message: Message) -> None:
             await message.answer(NOT_REGISTERED_MESSAGE)
             return
 
-        stats = get_stats(db, message.from_user.id)
+        stats = get_extended_stats(db, str(message.from_user.id))
         if not stats:
             logger.info(f"📊 Игрок @{username} пытался получить статистику, ни разу не сыграв.")
             await message.answer(NO_STATS_MESSAGE)
@@ -46,10 +46,16 @@ async def stats_command(message: Message) -> None:
         logger.info(f"📊 Игрок @{username} получил свою статистику.")
         await message.answer(
             STATS_HEADER + STATS_TEMPLATE.format(
-                games_played=stats.games_played,
-                wins=stats.wins,
-                losses=stats.losses,
-                rating=stats.rating,
+                games_played=stats["games_played"],
+                wins=stats["wins"],
+                losses=stats["losses"],
+                rating=stats["rating"],
+                place=stats["place"],
+                total_players=stats["total_players"],
+                first_seen=stats["first_seen"].strftime("%d.%m.%Y"),
+                last_seen=stats["last_seen"].strftime("%d.%m.%Y"),
+                avg_time=int(stats["avg_time"] // 60),
+                total_time=int(stats["total_time"] // 60),
             ),
             parse_mode='HTML',
         )
@@ -81,6 +87,8 @@ async def leaderboard_command(message: Message) -> None:
         for i, (player_username, rating) in enumerate(bottom_players, start_index):
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
+
+        # text += LEADERBOARD_FOOTER.format(total_players=total_players)
 
         logger.info(f"🥇 Игрок @{username} получил рейтинг игроков.")
         await message.answer(text, parse_mode='html', reply_markup=rating_menu())
