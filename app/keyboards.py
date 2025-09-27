@@ -22,6 +22,25 @@ def main_menu() -> InlineKeyboardMarkup:
     return keyboard
 
 
+def after_game_menu() -> InlineKeyboardMarkup:
+    """
+    Создает inline-клавиатуру после-игрового меню с основными командами:
+    - Сыграть в музыкального бота
+    - Новая игра
+    - Присоединиться к игре
+    - Главное меню
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🎸 Сыграть в музыкального бота", url="https://t.me/song_sniper_bot")],
+            [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
+            [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
+        ]
+    )
+    return keyboard
+
+
 def connect_menu() -> InlineKeyboardMarkup:
     """
     Создает inline-клавиатуру для меню подключения к игре:
@@ -31,7 +50,7 @@ def connect_menu() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
-            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )
     return keyboard
@@ -71,18 +90,18 @@ def current_game_menu() -> InlineKeyboardMarkup:
     - Главное меню
     """
     keyboard_buttons = []
-    
+
     # Добавляем кнопки с ID игр
     for game in games:
         keyboard_buttons.append([InlineKeyboardButton(text=f"{game}", callback_data=f"join_game_{game}")])
-    
+
     # Добавляем навигационные кнопки
     keyboard_buttons.extend([
         [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
         [InlineKeyboardButton(text="🔃 Обновить список игр", callback_data="refresh_games")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+        [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
     ])
-    
+
     keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
     return keyboard
 
@@ -96,7 +115,7 @@ def rating_menu() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="ℹ️ О рейтинге", callback_data="about_rating")],
-            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )
     return keyboard
@@ -109,7 +128,7 @@ def back_to_main_menu() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )
     return keyboard

@@ -43,10 +43,13 @@ async def create_game_callback(callback: CallbackQuery) -> None:
         user_game_requests[user_id] = None  # Помечаем, что игрок создал игру и ждет подключения второго
 
         # Запускаем таск автоудаления игры через 5 минут
-        asyncio.create_task(remove_game_if_no_join(game_id))
+        asyncio.create_task(remove_game_if_no_join(game_id, callback.bot))
 
         await callback.message.edit_text(STARTING_GAME.format(game_id=game_id), reply_markup=connect_menu(),
                                          parse_mode="html")
+
+        # Сохраняем message_id сообщения о создании игры для последующего удаления
+        games[game_id]["creation_message_id"] = callback.message.message_id
     else:
         logger.warning(f"⚠️ Игрок @{username} пытался создать ещё игру, не закончив предыдущую.")
         await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=main_menu())
@@ -97,6 +100,14 @@ async def join_game_by_id_callback(callback: CallbackQuery) -> None:
         username_player2 = usernames.get(player2, "Игрок 2")
 
         logger.info(f"➕ Игрок @{username} присоединился к игре, ID игры: {game_id}")
+
+        # Удаляем сообщение о создании игры у первого игрока
+        creation_message_id = games[game_id].get("creation_message_id")
+        if creation_message_id:
+            try:
+                await callback.bot.delete_message(player1, creation_message_id)
+            except Exception:
+                pass
 
         await callback.message.edit_text(SUCCESSFULLY_JOINED.format(game_id=game_id))
         await callback.bot.send_message(player1, PLAYER1_GAME_START.format(username=username_player2),

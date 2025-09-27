@@ -6,11 +6,11 @@ from app.game_logic import print_board, process_shot, check_victory
 from app.db_utils.match import update_match_result
 from app.db_utils.stats import update_stats_after_match
 from app.dependencies import db_session
-from app.keyboards import main_menu, enemy_board_keyboard
+from app.keyboards import after_game_menu, enemy_board_keyboard
 from app.logger import setup_logger
 
 from app.messages.texts import (
-    GAME_NOT_FOUND, LOSER_SUR, WINNER_SUR, NOT_YOUR_TURN, BAD_COORDINATES, WINNER, LOSER,
+    GAME_NOT_FOUND, LOSER_SUR, WINNER_SUR, AD_AFTER_GAME, NOT_YOUR_TURN, BAD_COORDINATES, WINNER, LOSER,
     SUCCESSFUL_SHOT, YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT, BAD_SHOT, YOUR_BOARD_TEXT_AFTER_BAD_SHOT
 )
 
@@ -63,25 +63,30 @@ async def handle_surrender(message: Message) -> None:
     await message.bot.send_message(
         user_id,
         LOSER_SUR.format(username=winner_username),
+        parse_mode="html",
         reply_markup=ReplyKeyboardRemove()
     )
 
     await message.bot.send_message(
         user_id,
-        "🌀 Выберите действие:",
-        reply_markup=main_menu()
+        text=AD_AFTER_GAME,
+        parse_mode="html",
+        disable_web_page_preview=True,
+        reply_markup=after_game_menu()
     )
 
-    # Для победителя
     await message.bot.send_message(
         opponent_id,
         WINNER_SUR.format(username=loser_username),
+        parse_mode="html",
         reply_markup=ReplyKeyboardRemove()
     )
     await message.bot.send_message(
         opponent_id,
-        "🌀 Выберите действие:",
-        reply_markup=main_menu()
+        text=AD_AFTER_GAME,
+        parse_mode="html",
+        disable_web_page_preview=True,
+        reply_markup=after_game_menu()
     )
 
 
@@ -144,12 +149,35 @@ async def handle_shot(message: Message) -> None:
 
         games.pop(game_id, None)
 
-        await message.answer(WINNER.format(username=opponent_username), reply_markup=main_menu())
         await message.bot.send_message(
             opponent_id,
             LOSER.format(username=current_username),
-            reply_markup=main_menu()
+            parse_mode="html",
+            reply_markup=ReplyKeyboardRemove()
         )
+
+        await message.bot.send_message(
+            opponent_id,
+            text=AD_AFTER_GAME,
+            parse_mode="html",
+            disable_web_page_preview=True,
+            reply_markup=after_game_menu()
+        )
+
+        await message.bot.send_message(
+            user_id,
+            WINNER.format(username=opponent_username),
+            parse_mode="html",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        await message.bot.send_message(
+            user_id,
+            text=AD_AFTER_GAME,
+            parse_mode="html",
+            disable_web_page_preview=True,
+            reply_markup=after_game_menu()
+        )
+
         return
 
     if hit:
