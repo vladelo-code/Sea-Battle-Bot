@@ -7,6 +7,7 @@ from app.logger import setup_logger
 from app.services.player_service import register_or_update_player
 from app.dependencies import db_session
 from app.messages.texts import START_MESSAGE, GAME_RULES
+from app.config import ADMIN_ID
 
 logger = setup_logger(__name__)
 
@@ -24,7 +25,10 @@ async def start_command(message: Message) -> None:
     with db_session() as db:
         register_or_update_player(db, telegram_id=str(message.from_user.id), username=message.from_user.username)
 
-    await message.answer(START_MESSAGE, reply_markup=main_menu(), parse_mode="HTML", disable_web_page_preview=True)
+    # Проверяем, является ли пользователь администратором
+    is_admin = str(message.from_user.id) == ADMIN_ID
+
+    await message.answer(START_MESSAGE, reply_markup=main_menu(is_admin=is_admin), parse_mode="HTML", disable_web_page_preview=True)
 
 
 async def show_rules_callback(callback: CallbackQuery) -> None:
@@ -61,7 +65,10 @@ async def main_menu_callback(callback: CallbackQuery) -> None:
     with db_session() as db:
         register_or_update_player(db, telegram_id=str(callback.from_user.id), username=callback.from_user.username)
 
-    await callback.message.edit_text(START_MESSAGE, reply_markup=main_menu(), parse_mode="HTML",
+    # Проверяем, является ли пользователь администратором
+    is_admin = str(callback.from_user.id) == ADMIN_ID
+
+    await callback.message.edit_text(START_MESSAGE, reply_markup=main_menu(is_admin=is_admin), parse_mode="HTML",
                                      disable_web_page_preview=True)
 
 

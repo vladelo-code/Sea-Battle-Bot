@@ -2,24 +2,31 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from app.storage import games
 
 
-def main_menu() -> InlineKeyboardMarkup:
+def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     """
     Создает inline-клавиатуру главного меню с основными командами:
     - Новая игра
     - Присоединиться к игре
     - Мой профиль
     - Рейтинг
+    - Рассылка (только для админа)
+    
+    :param is_admin: Показывать ли кнопку рассылки для администратора
     """
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
-            [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
-            [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
-            [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
-            [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")],
-            [InlineKeyboardButton(text="🎖️ Рекорды игры", callback_data="show_records")]
-        ]
-    )
+    keyboard_buttons = [
+        [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
+        [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+        [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
+        [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
+        [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")],
+        [InlineKeyboardButton(text="🎖️ Рекорды игры", callback_data="show_records")]
+    ]
+    
+    # Добавляем кнопку рассылки только для администратора
+    if is_admin:
+        keyboard_buttons.append([InlineKeyboardButton(text="📢 Рассылка", callback_data="broadcast_menu")])
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
     return keyboard
 
 
@@ -158,5 +165,37 @@ def enemy_board_keyboard(game_id: str, opponent_id: int) -> ReplyKeyboardMarkup:
                  ] + [
                      [KeyboardButton(text="🏳️ Сдаться")]
                  ],
+    )
+    return keyboard
+
+
+def broadcast_menu() -> InlineKeyboardMarkup:
+    """
+    Создает inline-клавиатуру меню рассылки:
+    - Новое сообщение
+    - Главное меню
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 Новое сообщение", callback_data="new_broadcast_message")],
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
+        ]
+    )
+    return keyboard
+
+
+def broadcast_confirm_menu() -> InlineKeyboardMarkup:
+    """
+    Создает inline-клавиатуру подтверждения рассылки:
+    - Отправить всем
+    - Отменить
+    - Главное меню
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📢 Отправить всем", callback_data="send_broadcast")],
+            [InlineKeyboardButton(text="❌ Отменить", callback_data="cancel_broadcast")],
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
+        ]
     )
     return keyboard
