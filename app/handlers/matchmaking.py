@@ -56,7 +56,10 @@ async def create_game_callback(callback: CallbackQuery) -> None:
         games[game_id]["creation_message_id"] = callback.message.message_id
     else:
         logger.warning(f"⚠️ Игрок @{username} пытался создать ещё игру, не закончив предыдущую.")
-        await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+        try:
+            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+        except Exception:
+            pass
 
 
 async def join_game_callback(callback: CallbackQuery) -> None:
@@ -86,7 +89,10 @@ async def join_game_callback(callback: CallbackQuery) -> None:
     if active_game:
         logger.warning(
             f"⚠️ Игрок @{username} пытался присоединиться к игре, уже участвуя в активной игре {active_game}.")
-        await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+        try:
+            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+        except Exception:
+            pass
     else:
         user_game_requests[user_id] = None
         await callback.message.edit_text(CHOOSE_CONNECTING_GAME, reply_markup=current_game_menu())
@@ -112,18 +118,30 @@ async def join_game_by_id_callback(callback: CallbackQuery) -> None:
 
     if result == "same_game":
         logger.warning(f"⚠️ Игрок @{username} пытался подключиться к своей же игре с ID: {game_id}")
-        await callback.message.edit_text(JOIN_CONNECTING_GAME_ERROR, reply_markup=current_game_menu())
+        try:
+            await callback.message.edit_text(JOIN_CONNECTING_GAME_ERROR, reply_markup=current_game_menu())
+        except Exception:
+            pass
 
     elif result == "not_found":
-        await callback.message.edit_text(GAME_NOT_FOUND.format(game_id=game_id), reply_markup=main_menu())
+        try:
+            await callback.message.edit_text(GAME_NOT_FOUND.format(game_id=game_id), reply_markup=main_menu())
+        except Exception:
+            pass
 
     elif result == "already_in_active_game":
         logger.warning(f"⚠️ Игрок @{username} пытался присоединиться к игре, уже участвуя в активной игре.")
-        await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+        try:
+            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+        except Exception:
+            pass
 
 
     elif result == "invalid":
-        await callback.message.edit_text(INVALID_GAME_DATA, reply_markup=main_menu())
+        try:
+            await callback.message.edit_text(INVALID_GAME_DATA, reply_markup=main_menu())
+        except Exception:
+            pass
 
     elif isinstance(result, dict) and result.get("status") == "joined":
         user_game_requests.pop(user_id, None)
