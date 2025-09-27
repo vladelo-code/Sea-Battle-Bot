@@ -67,13 +67,16 @@ async def leaderboard_callback(callback: CallbackQuery) -> None:
     """
     Обрабатывает callback-запрос показа топ-лидера рейтинга.
     Получает топ игроков из БД и формирует сообщение с рейтингом.
+    Если текущий пользователь не входит в топ, показывает его позицию.
 
     :param callback: Callback-запрос от пользователя.
     """
     await callback.answer()
     username = callback.from_user.username
     with db_session() as db:
-        top_players, bottom_players, total_players = get_top_and_bottom_players(db)
+        top_players, bottom_players, total_players, current_user_position = get_top_and_bottom_players(
+            db, current_user_id=str(callback.from_user.id)
+        )
 
         if not top_players:
             logger.info(f"🥇 Игрок @{username} пытался получить рейтинг, но он пуст.")
@@ -81,13 +84,22 @@ async def leaderboard_callback(callback: CallbackQuery) -> None:
             return
 
         text = LEADERBOARD_HEADER
-        for i, (player_username, rating) in enumerate(top_players, 1):
+        for i, (player_username, rating, _) in enumerate(top_players, 1):
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
 
-        text += "...\n"
+        # Если пользователь не в топе, добавляем его позицию
+        if current_user_position:
+            user_username, user_rating, user_position = current_user_position
+            name = f"@{user_username}" if user_username else UNKNOWN_USERNAME_FIRST
+            text += "...\n"
+            text += LEADERBOARD_ROW.format(index=user_position, username=name, rating=user_rating)
+            text += "...\n"
+        else:
+            text += "...\n"
+
         start_index = total_players - len(bottom_players) + 1
-        for i, (player_username, rating) in enumerate(bottom_players, start_index):
+        for i, (player_username, rating, _) in enumerate(bottom_players, start_index):
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
 

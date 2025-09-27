@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.models.player_stats import PlayerStats
 from app.models.player import Player
@@ -64,17 +65,19 @@ def get_stats(db: Session, player_id: int) -> PlayerStats | None:
     return db.query(PlayerStats).filter_by(player_id=player_id).first()
 
 
-def get_top_and_bottom_players(db: Session, top_limit: int = 10, bottom_limit: int = 3):
+def get_top_and_bottom_players(db: Session, top_limit: int = 10, bottom_limit: int = 3, current_user_id: str = None):
     """
     Возвращает топ лучших и худших игроков по рейтингу, а также общее количество игроков.
+    Если указан current_user_id и пользователь не входит в топ, возвращает его позицию.
 
     :param db: Сессия SQLAlchemy.
     :param top_limit: Количество лучших игроков (по умолчанию 10).
     :param bottom_limit: Количество худших игроков (по умолчанию 3).
-    :return: (топ-игроки, худшие игроки, общее количество игроков)
+    :param current_user_id: ID текущего пользователя для проверки его позиции.
+    :return: (топ-игроки, худшие игроки, общее количество игроков, позиция текущего пользователя)
     """
     top_players = (
-        db.query(Player.username, PlayerStats.rating)
+        db.query(Player.username, PlayerStats.rating, PlayerStats.player_id)
         .join(PlayerStats, Player.telegram_id == PlayerStats.player_id)
         .order_by(PlayerStats.rating.desc())
         .limit(top_limit)
@@ -82,7 +85,7 @@ def get_top_and_bottom_players(db: Session, top_limit: int = 10, bottom_limit: i
     )
 
     bottom_players = (
-        db.query(Player.username, PlayerStats.rating)
+        db.query(Player.username, PlayerStats.rating, PlayerStats.player_id)
         .join(PlayerStats, Player.telegram_id == PlayerStats.player_id)
         .order_by(PlayerStats.rating.asc())
         .limit(bottom_limit)
@@ -90,5 +93,31 @@ def get_top_and_bottom_players(db: Session, top_limit: int = 10, bottom_limit: i
     )
 
     total_players = db.query(PlayerStats).count()
+    
+    # Получаем позицию текущего пользователя, если он указан
+    current_user_position = None
+    if current_user_id:
+        # Проверяем, есть ли пользователь в топе
+        user_in_top = any(player_id == int(current_user_id) for _, _, player_id in top_players)
+        user_in_bottom = any(player_id == int(current_user_id) for _, _, player_id in bottom_players)
+        
+        if not user_in_top and not user_in_bottom:
+            # Получаем позицию пользователя в общем рейтинге
+            user_position_query = (
+                db.query(Player.username, PlayerStats.rating, PlayerStats.player_id)
+                .join(PlayerStats, Player.telegram_id == PlayerStats.player_id)
+                .filter(PlayerStats.player_id == int(current_user_id))
+                .first()
+            )
+            
+            if user_position_query:
+                # Считаем количество игроков с рейтингом выше
+                higher_rated_count = (
+                    db.query(func.count(PlayerStats.player_id))
+                    .filter(PlayerStats.rating > user_position_query.rating)
+                    .scalar()
+                )
+                position = higher_rated_count + 1
+                current_user_position = (user_position_query.username, user_position_query.rating, position)
 
-    return top_players, sorted(bottom_players, reverse=True), total_players
+    return top_players, sorted(bottom_players, reverse=True), total_players, current_user_position
