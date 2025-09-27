@@ -3,7 +3,7 @@ from aiogram.types import Message
 
 from app.keyboards import main_menu, rating_menu
 from app.logger import setup_logger
-from app.db_utils.stats import get_stats, get_top_players
+from app.db_utils.stats import get_stats, get_top_and_bottom_players
 from app.db_utils.player import get_player_by_telegram_id
 from app.dependencies import db_session
 
@@ -15,7 +15,6 @@ from app.messages.texts import (
     EMPTY_LEADERBOARD_MESSAGE,
     LEADERBOARD_HEADER,
     LEADERBOARD_ROW,
-    LEADERBOARD_FOOTER,
     UNKNOWN_USERNAME_FIRST,
     ELO_INFO,
 )
@@ -51,7 +50,8 @@ async def stats_command(message: Message) -> None:
                 wins=stats.wins,
                 losses=stats.losses,
                 rating=stats.rating,
-            )
+            ),
+            parse_mode='HTML',
         )
 
 
@@ -64,7 +64,7 @@ async def leaderboard_command(message: Message) -> None:
     """
     username = message.from_user.username
     with db_session() as db:
-        top_players, total_players = get_top_players(db)
+        top_players, bottom_players, total_players = get_top_and_bottom_players(db)
 
         if not top_players:
             logger.info(f"🥇 Игрок @{username} пытался получить рейтинг, но он пуст.")
@@ -76,7 +76,11 @@ async def leaderboard_command(message: Message) -> None:
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
             text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
 
-        text += LEADERBOARD_FOOTER.format(total_players=total_players)
+        text += "...\n"
+        start_index = total_players - len(bottom_players) + 1
+        for i, (player_username, rating) in enumerate(bottom_players, start_index):
+            name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
+            text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
 
         logger.info(f"🥇 Игрок @{username} получил рейтинг игроков.")
         await message.answer(text, parse_mode='html', reply_markup=rating_menu())

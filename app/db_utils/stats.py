@@ -64,22 +64,31 @@ def get_stats(db: Session, player_id: int) -> PlayerStats | None:
     return db.query(PlayerStats).filter_by(player_id=player_id).first()
 
 
-def get_top_players(db: Session, limit: int = 10):
+def get_top_and_bottom_players(db: Session, top_limit: int = 10, bottom_limit: int = 3):
     """
-    Возвращает список топ игроков по рейтингу и общее количество игроков.
+    Возвращает топ лучших и худших игроков по рейтингу, а также общее количество игроков.
 
     :param db: Сессия SQLAlchemy.
-    :param limit: Количество лучших игроков в выдаче (по умолчанию 10).
-    :return: (список игроков, общее количество игроков)
+    :param top_limit: Количество лучших игроков (по умолчанию 10).
+    :param bottom_limit: Количество худших игроков (по умолчанию 3).
+    :return: (топ-игроки, худшие игроки, общее количество игроков)
     """
-    results = (
+    top_players = (
         db.query(Player.username, PlayerStats.rating)
         .join(PlayerStats, Player.telegram_id == PlayerStats.player_id)
         .order_by(PlayerStats.rating.desc())
-        .limit(limit)
+        .limit(top_limit)
+        .all()
+    )
+
+    bottom_players = (
+        db.query(Player.username, PlayerStats.rating)
+        .join(PlayerStats, Player.telegram_id == PlayerStats.player_id)
+        .order_by(PlayerStats.rating.asc())
+        .limit(bottom_limit)
         .all()
     )
 
     total_players = db.query(PlayerStats).count()
 
-    return results, total_players
+    return top_players, sorted(bottom_players, reverse=True), total_players
