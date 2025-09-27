@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery
 
-from app.keyboards import main_menu, rating_menu, back_to_main_menu
+from app.keyboards import rating_menu, back_to_main_menu
 from app.logger import setup_logger
 from app.db_utils.stats import get_top_and_bottom_players
 from app.db_utils.player import get_player_by_telegram_id, get_extended_stats
@@ -135,7 +135,7 @@ async def get_elo_explanation_callback(callback: CallbackQuery) -> None:
 
 def register_handler(dp: Dispatcher) -> None:
     """
-    Регистрирует обработчики сообщений для статистики, рейтинга и объяснения Elo.
+    Регистрирует обработчики inline-кнопок для статистики, рейтинга и объяснения Elo.
 
     :param dp: Экземпляр Dispatcher из aiogram.
     """

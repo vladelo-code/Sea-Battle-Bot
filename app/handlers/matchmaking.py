@@ -189,11 +189,10 @@ async def refresh_games_callback(callback: CallbackQuery) -> None:
 
 def register_handler(dp: Dispatcher) -> None:
     """
-    Регистрирует хендлеры команд:
+    Регистрирует хендлеры inline-кнопок:
     - Создание новой игры
     - Присоединение к игре
     - Обработка ID игры
-    - Callback-обработчики для inline-кнопок
     """
     # Callback-обработчики для inline-кнопок
     dp.callback_query.register(create_game_callback, lambda c: c.data == "new_game")

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from app.keyboards import back_to_main_menu
 from app.logger import setup_logger
-from app.messages.texts import GAME_RECORDS_HEADER, GAME_RECORDS_TEMPLATE, NO_RECORDS_MESSAGE
+from app.messages.texts import GAME_RECORDS_HEADER, NO_RECORDS_MESSAGE
 from app.dependencies import db_session
 from app.db_utils.records import (
     get_fastest_game,
