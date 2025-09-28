@@ -53,7 +53,7 @@ def bot_difficulty_menu() -> InlineKeyboardMarkup:
 def after_game_menu() -> InlineKeyboardMarkup:
     """
     Создает inline-клавиатуру после-игрового меню с основными командами:
-    - Сыграть в музыкального бота
+    - Сыграть в музыкальном боте
     - Новая игра
     - Присоединиться к игре
     - Главное меню
@@ -63,6 +63,7 @@ def after_game_menu() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🎸 Сыграть в музыкального бота", url="https://t.me/song_sniper_bot")],
             [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
             [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+            [InlineKeyboardButton(text="🤖 Игра с ботом", callback_data="play_vs_bot")],
             [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )
