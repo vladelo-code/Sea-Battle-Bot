@@ -7,7 +7,19 @@ Coordinate = Tuple[int, int]
 
 
 class BotAI:
-    HARD_HIT_PROBABILITY = 0.7  # 70% вероятность использовать знание о кораблях в hard режиме
+    """
+    Класс AI бота для Морского боя с тремя уровнями сложности: easy, medium, hard.
+    В режиме hard бот использует комбинированную стратегию:
+    - случайные выстрелы,
+    - шахматная схема,
+    - "знание" о координатах кораблей (читерство).
+    Также реализована логика добивания корабля с корректным определением линии.
+    """
+
+    # Вероятности для hard режима
+    CHEAT_PROBABILITY = 0.1  # 10% вероятность читерства
+    CHECKER_PROBABILITY = 0.5  # 50% вероятность шахматной схемы
+    RANDOM_PROBABILITY = 0.4  # 40% вероятность случайного выбора
 
     def __init__(self, difficulty: str, enemy_board: Optional[List[List[str]]] = None):
         self.difficulty = difficulty  # easy | medium | hard
@@ -17,6 +29,7 @@ class BotAI:
         self.last_hit: Optional[Coordinate] = None
         self.ship_positions: set[Coordinate] = set()  # для hard уровня - "знание" о кораблях
         self.hit_sequence: list[Coordinate] = []  # последовательность попаданий для определения направления
+        self.ship_direction: Optional[str] = None  # 'horizontal' или 'vertical' для hard режима
 
         # Для medium/hard — предвычисляем клетки по «шахматной» схеме
         self.checker_cells: list[Coordinate] = [
@@ -35,6 +48,7 @@ class BotAI:
         self.first_hit = None
         self.last_hit = None
         self.hit_sequence.clear()
+        self.ship_direction = None
 
     def _neighbors(self, x: int, y: int) -> List[Coordinate]:
         """Возвращает соседние клетки (вверх, вниз, влево, вправо) для добивания"""
@@ -72,23 +86,21 @@ class BotAI:
         if self.difficulty == "easy":
             return self._random_untried()
 
-        # Если есть цели для добивания — бьем туда (для medium/hard)
+        # 1. ПРИОРИТЕТ: Если есть цели для добивания — бьем туда
         if self.targets:
             return self.targets.pop(0)
 
-        # Hard — с вероятностью HARD_HIT_PROBABILITY "знаем" где корабль
-        if self.difficulty == "hard" and random.random() < self.HARD_HIT_PROBABILITY:
-            known_ship = self._get_known_ship_position()
-            if known_ship is not None:
-                return known_ship
+        # 2. Для hard режима - выбор стратегии по независимым вероятностям
+        if self.difficulty == "hard":
+            return self._choose_hard_strategy()
 
-        # medium/hard — шахматные клетки
-        if self.difficulty in ["medium", "hard"]:
+        # 3. medium — шахматные клетки
+        if self.difficulty == "medium":
             coord = self._random_checker_untried()
             if coord is not None:
                 return coord
 
-        # fallback — случайно
+        # 4. fallback — случайно
         return self._random_untried()
 
     def process_result(self, coord: Coordinate, hit: Optional[bool], ship_destroyed: bool) -> None:
@@ -98,6 +110,7 @@ class BotAI:
         - Если попадание — обновляет hit_sequence и генерирует новые цели
         - Если корабль уничтожен — сбрасывает охоту
         """
+        was_targeting_shot = coord in self.targets
         self.tried.add(coord)
 
         # Easy уровень - никакой стратегии добивания
@@ -111,21 +124,28 @@ class BotAI:
             self.last_hit = coord
             self.hit_sequence.append(coord)
 
+            # Удаляем попавшую цель из списка, если она там была
+            if was_targeting_shot and coord in self.targets:
+                self.targets.remove(coord)
+
             if ship_destroyed:
                 # корабль добит — очистим состояние охоты
                 self.reset_ship_hunt()
             else:
-                # Hard уровень - если 2+ попаданий подряд, добиваем вдоль линии
-                if self.difficulty == "hard" and len(self.hit_sequence) >= 2:
-                    self.targets = self._get_direction_targets()
-                else:
-                    # Medium/Hard уровни - добавляем соседние клетки для добивания
+                if len(self.hit_sequence) == 1:
+                    # Первое попадание - добавляем все 4 соседние клетки
                     for nx, ny in self._neighbors(x, y):
                         if (nx, ny) not in self.tried and (nx, ny) not in self.targets:
                             self.targets.append((nx, ny))
+                else:
+                    # Второе и последующие попадания - обновляем цели вдоль линии
+                    self._update_targets_by_direction()
         else:
-            # мимо — ничего не делаем
-            pass
+            # Промах
+            if was_targeting_shot and coord in self.targets:
+                self.targets.remove(coord)
+            if self.hit_sequence:
+                self._update_targets_after_miss(coord)
 
     def _extract_ship_positions(self, enemy_board: List[List[str]]) -> None:
         """Для hard уровня - извлекаем реальные позиции всех кораблей противника"""
@@ -142,13 +162,37 @@ class BotAI:
                 return coord
         return None
 
-    def _get_direction_targets(self) -> List[Coordinate]:
-        """
-        Для hard уровня - возвращает клетки вдоль линии корабля для продолжения выстрелов.
-        Логика исправлена: учитывает промахи с одной стороны и продолжает в противоположную сторону.
-        """
+    def _choose_hard_strategy(self) -> Coordinate:
+        """Выбирает стратегию для hard режима на основе независимых вероятностей"""
+        possible_coords: List[Coordinate] = []
+
+        # Читерство
+        if random.random() < self.CHEAT_PROBABILITY:
+            cheat_coord = self._get_known_ship_position()
+            if cheat_coord is not None:
+                possible_coords.append(cheat_coord)
+
+        # Шахматная схема
+        if random.random() < self.CHECKER_PROBABILITY:
+            checker_coord = self._random_checker_untried()
+            if checker_coord is not None:
+                possible_coords.append(checker_coord)
+
+        # Рандом
+        if random.random() < self.RANDOM_PROBABILITY:
+            random_coord = self._random_untried()
+            possible_coords.append(random_coord)
+
+        if possible_coords:
+            return random.choice(possible_coords)
+
+        # Fallback
+        return self._random_untried()
+
+    def _update_targets_by_direction(self) -> None:
+        """Обновляет цели для добивания на основе направления корабля"""
         if len(self.hit_sequence) < 2:
-            return []
+            return
 
         # Определяем направление по первым двум попаданиям
         first = self.hit_sequence[0]
@@ -157,41 +201,102 @@ class BotAI:
         dx = second[0] - first[0]
         dy = second[1] - first[1]
 
-        if dx != 0:
-            dx //= abs(dx)
-        if dy != 0:
-            dy //= abs(dy)
+        # Нормализуем
+        dx = 0 if dx == 0 else dx // abs(dx)
+        dy = 0 if dy == 0 else dy // abs(dy)
 
-        direction_targets = []
+        self.ship_direction = 'horizontal' if dx != 0 else 'vertical'
 
-        # Сортируем попадания по линии
-        hits_sorted = sorted(self.hit_sequence, key=lambda c: (c[0], c[1]))
+        self.targets.clear()
 
-        # Проверяем оба конца линии и учитываем блокировки (промахи)
-        for end in [hits_sorted[0], hits_sorted[-1]]:
-            # Продолжаем в направлении линии
-            nx, ny = end
-            while True:
-                nx += dx
-                ny += dy
-                if not (0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE):
+        if self.ship_direction == 'horizontal':
+            y_coord = first[1]
+            min_x = min(c[0] for c in self.hit_sequence)
+            max_x = max(c[0] for c in self.hit_sequence)
+
+            # Проверяем левую сторону
+            for x in range(min_x - 1, -1, -1):
+                coord = (x, y_coord)
+                if coord not in self.tried:
+                    self.targets.append(coord)
+                else:
                     break
-                if (nx, ny) in self.tried:
-                    # если промахнута клетка — блокируем дальнейшее продолжение
-                    break
-                if (nx, ny) not in direction_targets:
-                    direction_targets.append((nx, ny))
 
-            # Противоположная сторона
-            nx, ny = end
-            while True:
-                nx -= dx
-                ny -= dy
-                if not (0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE):
+            # Проверяем правую сторону
+            for x in range(max_x + 1, BOARD_SIZE):
+                coord = (x, y_coord)
+                if coord not in self.tried:
+                    self.targets.append(coord)
+                else:
                     break
-                if (nx, ny) in self.tried:
-                    break
-                if (nx, ny) not in direction_targets:
-                    direction_targets.append((nx, ny))
+        else:
+            x_coord = first[0]
+            min_y = min(c[1] for c in self.hit_sequence)
+            max_y = max(c[1] for c in self.hit_sequence)
 
-        return direction_targets
+            # Проверяем верх
+            for y in range(min_y - 1, -1, -1):
+                coord = (x_coord, y)
+                if coord not in self.tried:
+                    self.targets.append(coord)
+                else:
+                    break
+
+            # Проверяем низ
+            for y in range(max_y + 1, BOARD_SIZE):
+                coord = (x_coord, y)
+                if coord not in self.tried:
+                    self.targets.append(coord)
+                else:
+                    break
+
+    def _update_targets_after_miss(self, missed_coord: Coordinate) -> None:
+        """
+        Обновляет цели после промаха на одном конце линии:
+        - Если промахнулись на краю линии, бот переключается на противоположную сторону.
+        - Если промах где-то в середине — бот не меняет стратегию полностью.
+        """
+        if not self.hit_sequence or not self.ship_direction:
+            return
+
+        self.targets.clear()
+
+        if self.ship_direction == 'horizontal':
+            y_coord = self.hit_sequence[0][1]
+            min_x = min(c[0] for c in self.hit_sequence)
+            max_x = max(c[0] for c in self.hit_sequence)
+
+            # Промах слева → идем вправо
+            if missed_coord[0] <= min_x:
+                for x in range(max_x + 1, BOARD_SIZE):
+                    coord = (x, y_coord)
+                    if coord not in self.tried:
+                        self.targets.append(coord)
+                        break
+            # Промах справа → идем влево
+            elif missed_coord[0] >= max_x:
+                for x in range(min_x - 1, -1, -1):
+                    coord = (x, y_coord)
+                    if coord not in self.tried:
+                        self.targets.append(coord)
+                        break
+
+        else:  # vertical
+            x_coord = self.hit_sequence[0][0]
+            min_y = min(c[1] for c in self.hit_sequence)
+            max_y = max(c[1] for c in self.hit_sequence)
+
+            # Промах сверху → идем вниз
+            if missed_coord[1] <= min_y:
+                for y in range(max_y + 1, BOARD_SIZE):
+                    coord = (x_coord, y)
+                    if coord not in self.tried:
+                        self.targets.append(coord)
+                        break
+            # Промах снизу → идем вверх
+            elif missed_coord[1] >= max_y:
+                for y in range(min_y - 1, -1, -1):
+                    coord = (x_coord, y)
+                    if coord not in self.tried:
+                        self.targets.append(coord)
+                        break
