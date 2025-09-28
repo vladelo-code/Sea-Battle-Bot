@@ -16,6 +16,7 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     keyboard_buttons = [
         [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
         [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+        [InlineKeyboardButton(text="🤖 Игра с ботом", callback_data="play_vs_bot")],
         [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
         [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
         [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")],
@@ -27,6 +28,25 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
         keyboard_buttons.append([InlineKeyboardButton(text="📢 Рассылка", callback_data="broadcast_menu")])
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+    return keyboard
+
+
+def bot_difficulty_menu() -> InlineKeyboardMarkup:
+    """
+    Меню выбора сложности игры против бота:
+    - Простой
+    - Средний
+    - Сложный
+    - В главное меню
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🟢 Простой", callback_data="bot_easy")],
+            [InlineKeyboardButton(text="🟡 Средний", callback_data="bot_medium")],
+            [InlineKeyboardButton(text="🔴 Сложный", callback_data="bot_hard")],
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")],
+        ]
+    )
     return keyboard
 
 
