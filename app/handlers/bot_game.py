@@ -49,8 +49,6 @@ async def start_bot_game_callback(callback: CallbackQuery) -> None:
                                                 reply_markup=main_menu())
                 return
 
-    logger.info(f"🎮 Игрок @{username} выбрал режим игры с ботом: {difficulty}")
-
     game_id = start_bot_game(user_id=user_id, username=username, difficulty=difficulty)
 
     # Отправляем стартовое поле и клавиатуру выстрелов по боту
