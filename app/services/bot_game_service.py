@@ -42,7 +42,7 @@ def start_bot_game(user_id: int, username: Optional[str], difficulty: str) -> st
         },
         "message_ids": {},
         "bot_state": {
-            "ai": BotAI(difficulty),
+            "ai": BotAI(difficulty, human_board),
         },
     }
 
@@ -89,7 +89,7 @@ async def handle_player_shot_vs_bot(message: Message) -> None:
     if check_victory(bot_board):
         # Игрок победил
         games.pop(game_id, None)
-        await message.bot.send_message(user_id, WINNER.format(username="Бот"), parse_mode="html",
+        await message.bot.send_message(user_id, WINNER.format(username="vladelo_sea_battle_bot"), parse_mode="html",
                                        reply_markup=ReplyKeyboardRemove())
         await message.bot.send_message(user_id, AD_AFTER_GAME, parse_mode="html", disable_web_page_preview=True,
                                        reply_markup=after_game_menu())
@@ -135,12 +135,23 @@ async def _bot_turn_loop(message: Message, game_id: str) -> None:
     while game["turn"] == bot_id:
         x, y = ai.choose_shot()
 
+        # Сохраняем состояние доски до выстрела для определения уничтожения корабля
+        board_before = [row[:] for row in human_board]
         result = process_shot(human_board, x, y)
-        # ship_destroyed приблизительно определяем: если вокруг клетки появились «❌» после handle_ship_destruction —
-        # но в текущей реализации process_shot уже помечает окружение при полном уничтожении. Берем эвристику:
-        ship_destroyed = False  # простая эвристика: не определяем точно, достаточно для очереди целей
+        
+        # Определяем, был ли корабль уничтожен, сравнивая состояние доски до и после выстрела
+        ship_destroyed = False
+        if result:  # Если попали
+            # Проверяем, появились ли новые "❌" вокруг попадания (признак уничтожения корабля)
+            for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+                nx, ny = x + dx, y + dy
+                if (0 <= nx < 10 and 0 <= ny < 10 and 
+                    board_before[nx][ny] == "⬜" and human_board[nx][ny] == "❌"):
+                    ship_destroyed = True
+                    break
+        
         ai.process_result((x, y), result, ship_destroyed)
-
+        await asyncio.sleep(0.9)
         if result is True:
             # По игроку попали — бот ходит снова
             await message.bot.send_message(
@@ -152,13 +163,13 @@ async def _bot_turn_loop(message: Message, game_id: str) -> None:
 
             if check_victory(human_board):
                 games.pop(game_id, None)
-                await message.bot.send_message(user_id, LOSER.format(username="Бот"), parse_mode="html",
+                await message.bot.send_message(user_id, LOSER.format(username="vladelo_sea_battle_bot"),
+                                               parse_mode="html",
                                                reply_markup=ReplyKeyboardRemove())
                 await message.bot.send_message(user_id, AD_AFTER_GAME, parse_mode="html",
                                                disable_web_page_preview=True, reply_markup=after_game_menu())
                 return
-            # задержка между последовательными попаданиями бота
-            await asyncio.sleep(3)
+
         elif result is False:
             # Мимо — ход переходит игроку
             game["turn"] = user_id

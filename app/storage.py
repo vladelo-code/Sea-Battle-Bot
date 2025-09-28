@@ -81,7 +81,7 @@ def create_bot_game(player_id: int, username: str, difficulty: str) -> str:
         "turn": player_id,
         "usernames": {player_id: safe_username(username, UNKNOWN_USERNAME_FIRST), bot_id: "vladelo_sea_battle_bot"},
         "message_ids": {},
-        "bot_state": {"ai": BotAI(difficulty)},
+        "bot_state": {"ai": BotAI(difficulty, human_board)},
     }
     return game_id
 
