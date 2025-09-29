@@ -25,7 +25,6 @@ async def start_command(message: Message) -> None:
     with db_session() as db:
         register_or_update_player(db, telegram_id=str(message.from_user.id), username=message.from_user.username)
 
-    # Проверяем, является ли пользователь администратором
     is_admin = str(message.from_user.id) == ADMIN_ID
 
     await message.answer(START_MESSAGE, reply_markup=main_menu(is_admin=is_admin), parse_mode="HTML", disable_web_page_preview=True)
@@ -65,7 +64,6 @@ async def main_menu_callback(callback: CallbackQuery) -> None:
     with db_session() as db:
         register_or_update_player(db, telegram_id=str(callback.from_user.id), username=callback.from_user.username)
 
-    # Проверяем, является ли пользователь администратором
     is_admin = str(callback.from_user.id) == ADMIN_ID
 
     await callback.message.edit_text(START_MESSAGE, reply_markup=main_menu(is_admin=is_admin), parse_mode="HTML",

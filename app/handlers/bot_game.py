@@ -5,22 +5,44 @@ from app.keyboards import bot_difficulty_menu, playing_menu, main_menu
 from app.logger import setup_logger
 from app.state.in_memory import games
 from app.services.bot_game_service import start_bot_game
-from app.messages.texts import YOUR_BOARD_TEXT, START_BOT_GAME
-
+from app.messages.texts import YOUR_BOARD_TEXT, START_BOT_GAME, STARTING_GAME_ERROR, INVALID_DIFFICULT_MODE
 
 logger = setup_logger(__name__)
 
 
 async def play_vs_bot_menu_callback(callback: CallbackQuery) -> None:
+    """
+    Обрабатывает нажатие кнопки для начала игры с ботом.
+    Отправляет игроку сообщение с инструкцией и клавиатуру выбора уровня сложности.
+
+    Args:
+        callback (CallbackQuery): объект колбэка от нажатия кнопки.
+
+    Returns:
+        None
+    """
     try:
         await callback.answer()
     except Exception:
         pass
 
-    await callback.message.edit_text(START_BOT_GAME, parse_mode='html', reply_markup=bot_difficulty_menu())
+    await callback.message.edit_text(START_BOT_GAME, parse_mode='HTML', reply_markup=bot_difficulty_menu())
 
 
 async def start_bot_game_callback(callback: CallbackQuery) -> None:
+    """
+    Обрабатывает выбор сложности для игры с ботом.
+    1. Проверяет корректность выбранной сложности.
+    2. Проверяет, есть ли у игрока уже активная игра.
+    3. Создаёт новую игру с ботом через start_bot_game.
+    4. Отправляет игроку стартовое поле и клавиатуру для выстрелов.
+
+    Args:
+        callback (CallbackQuery): объект колбэка от нажатия кнопки выбора сложности.
+
+    Returns:
+        None
+    """
     try:
         await callback.answer()
     except Exception:
@@ -36,7 +58,7 @@ async def start_bot_game_callback(callback: CallbackQuery) -> None:
     }.get(callback.data)
 
     if not difficulty:
-        await callback.message.edit_text("❗ Некорректный режим.", reply_markup=main_menu())
+        await callback.message.edit_text(INVALID_DIFFICULT_MODE, reply_markup=main_menu())
         return
 
     # Блокируем запуск новой игры, если пользователь уже участвует в какой-либо игре
@@ -45,18 +67,19 @@ async def start_bot_game_callback(callback: CallbackQuery) -> None:
             # если это игра с ботом или активная PvP (оба игрока есть) — запрещаем запуск
             if g.get("is_bot_game") or (g.get("player1") and g.get("player2")):
                 logger.warning(f"⚠️ Игрок @{username} пытался начать новую игру с ботом, имея активную игру {gid}.")
-                await callback.message.edit_text("⚠️ У вас уже есть активная игра. Завершите её, прежде чем начинать новую.",
-                                                reply_markup=main_menu())
+                await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=main_menu())
                 return
 
     game_id = start_bot_game(user_id=user_id, username=username, difficulty=difficulty)
 
     # Отправляем стартовое поле и клавиатуру выстрелов по боту
     await callback.message.edit_text(
-        YOUR_BOARD_TEXT.format(board=\
-            __import__('app.game_logic', fromlist=['print_board']).print_board(games[game_id]["boards"][user_id])
+        YOUR_BOARD_TEXT.format(
+            board=__import__('app.game_logic', fromlist=['print_board']).print_board(
+                games[game_id]["boards"][user_id]
+            )
         ),
-        parse_mode="html"
+        parse_mode="HTML"
     )
 
     await callback.bot.send_message(
@@ -67,7 +90,16 @@ async def start_bot_game_callback(callback: CallbackQuery) -> None:
 
 
 def register_handler(dp: Dispatcher) -> None:
+    """
+    Регистрирует обработчики колбэков для кнопок игры с ботом:
+    - play_vs_bot_menu_callback — для открытия меню выбора сложности.
+    - start_bot_game_callback — для запуска игры после выбора сложности.
+
+    Args:
+        dp (Dispatcher): объект диспетчера Aiogram.
+
+    Returns:
+        None
+    """
     dp.callback_query.register(play_vs_bot_menu_callback, lambda c: c.data == "play_vs_bot")
     dp.callback_query.register(start_bot_game_callback, lambda c: c.data in {"bot_easy", "bot_medium", "bot_hard"})
-
-

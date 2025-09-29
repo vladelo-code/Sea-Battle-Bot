@@ -27,13 +27,8 @@ def create_match(db: Session, game_id: str, player_1_id: int, player_2_id: int) 
     return match
 
 
-def update_match_result(
-        db: Session,
-        game_id: str,
-        winner_id: int = None,
-        result: str = None,
-        ended_at: datetime = None,
-) -> Type[Match] | None:
+def update_match_result(db: Session, game_id: str, winner_id: int = None, result: str = None,
+                        ended_at: datetime = None) -> Type[Match] | None:
     """
     Обновляет информацию о завершившемся матче.
 

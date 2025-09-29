@@ -19,8 +19,8 @@ class BotAI:
     MEDIUM_RANDOM_PROBABILITY = 0.5  # 50% шанс на случайный выстрел
 
     # Вероятности для hard режима
-    CHEAT_PROBABILITY = 0.2  # 10% вероятность читерства
-    CHECKER_PROBABILITY = 0.4  # 50% вероятность шахматной схемы
+    CHEAT_PROBABILITY = 0.15  # 10% вероятность читерства
+    CHECKER_PROBABILITY = 0.45  # 50% вероятность шахматной схемы
     RANDOM_PROBABILITY = 0.4  # 40% вероятность случайного выбора
 
     def __init__(self, difficulty: str, enemy_board: Optional[List[List[str]]] = None):

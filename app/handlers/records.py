@@ -148,5 +148,4 @@ def register_handler(dp: Dispatcher) -> None:
 
     :param dp: Объект диспетчера aiogram.
     """
-    # Callback-обработчики для inline-кнопок
     dp.callback_query.register(show_records_callback, lambda c: c.data == "show_records")

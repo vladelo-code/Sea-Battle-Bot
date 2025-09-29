@@ -5,6 +5,18 @@ from app.models.bot_game_stats import BotGameStats
 
 
 def get_or_create_bot_stats(db: Session, player_id: int, difficulty: str) -> BotGameStats:
+    """
+    Получает объект статистики игр против бота для конкретного игрока и уровня сложности.
+    Если статистика ещё не создана, создаёт новую запись.
+
+    Args:
+        db (Session): SQLAlchemy сессия базы данных.
+        player_id (int): ID игрока.
+        difficulty (str): Уровень сложности ("easy", "medium", "hard").
+
+    Returns:
+        BotGameStats: объект статистики для указанного игрока и уровня сложности.
+    """
     stats = (
         db.query(BotGameStats)
         .filter(BotGameStats.player_id == player_id, BotGameStats.difficulty == difficulty)
@@ -19,6 +31,19 @@ def get_or_create_bot_stats(db: Session, player_id: int, difficulty: str) -> Bot
 
 
 def increment_bot_game_result(db: Session, player_id: int, difficulty: str, is_win: bool) -> None:
+    """
+    Обновляет статистику игр против бота для указанного игрока:
+    увеличивает количество сыгранных игр, побед или поражений, а также время последней игры.
+
+    Args:
+        db (Session): SQLAlchemy сессия базы данных.
+        player_id (int): ID игрока.
+        difficulty (str): Уровень сложности ("easy", "medium", "hard").
+        is_win (bool): True, если игрок выиграл, False если проиграл.
+
+    Returns:
+        None
+    """
     stats = get_or_create_bot_stats(db, player_id, difficulty)
     stats.games_played += 1
     if is_win:
@@ -30,6 +55,27 @@ def increment_bot_game_result(db: Session, player_id: int, difficulty: str, is_w
 
 
 def get_aggregated_bot_stats(db: Session, player_id: int) -> dict:
+    """
+    Получает агрегированную статистику игр против бота для указанного игрока.
+    Включает суммарное количество игр, побед, поражений, а также разбивку по уровням сложности.
+
+    Args:
+        db (Session): SQLAlchemy сессия базы данных.
+        player_id (int): ID игрока.
+
+    Returns:
+        dict: словарь со следующей структурой:
+            {
+                "total_games": int,
+                "total_wins": int,
+                "total_losses": int,
+                "by_difficulty": {
+                    "easy": {"games": int, "wins": int, "losses": int, "last_played_at": datetime},
+                    "medium": {...},
+                    "hard": {...}
+                }
+            }
+    """
     rows = (
         db.query(BotGameStats)
         .filter(BotGameStats.player_id == player_id)

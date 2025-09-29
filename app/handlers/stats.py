@@ -139,7 +139,6 @@ def register_handler(dp: Dispatcher) -> None:
 
     :param dp: Экземпляр Dispatcher из aiogram.
     """
-    # Callback-обработчики для inline-кнопок
     dp.callback_query.register(stats_callback, lambda c: c.data == "my_profile")
     dp.callback_query.register(leaderboard_callback, lambda c: c.data == "rating")
     dp.callback_query.register(get_elo_explanation_callback, lambda c: c.data == "about_rating")

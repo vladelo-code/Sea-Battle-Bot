@@ -5,16 +5,29 @@ from app.dependencies import db_session
 from app.db_utils.player import get_player_by_telegram_id
 from app.db_utils.bot_stats import get_aggregated_bot_stats
 from app.keyboards import bot_analytic_menu
-from app.messages.texts import (
-    BOT_ANALYTICS_TEMPLATE,
-    NO_BOT_ANALYTICS,
-)
+from app.messages.texts import BOT_ANALYTICS_TEMPLATE, NO_BOT_ANALYTICS
 from app.logger import setup_logger
 
 logger = setup_logger(__name__)
 
 
 async def bot_analytics_callback(callback: CallbackQuery) -> None:
+    """
+    Обрабатывает нажатие на кнопку "Статистика бота" и отправляет игроку
+    его персональную аналитику по играм против бота.
+
+    1. Получает игрока по telegram_id.
+    2. Получает агрегированную статистику игр против бота.
+    3. Формирует текст с использованием BOT_ANALYTICS_TEMPLATE.
+    4. Отправляет или редактирует сообщение с готовой статистикой.
+    5. Если игрок не найден или статистики нет, показывает сообщение NO_BOT_ANALYTICS.
+
+    Args:
+        callback (CallbackQuery): объект колбэка от нажатия кнопки.
+
+    Returns:
+        None
+    """
     logger.info(f'📈 Игрок @{callback.from_user.username} получил свою статистику.')
     try:
         await callback.answer()
@@ -36,6 +49,10 @@ async def bot_analytics_callback(callback: CallbackQuery) -> None:
     by_diff = data.get("by_difficulty", {})
 
     def diff(name: str):
+        """
+        Вспомогательная функция для извлечения количества игр, побед и поражений
+        по заданному уровню сложности.
+        """
         d = by_diff.get(name, {})
         return d.get("games", 0), d.get("wins", 0), d.get("losses", 0)
 
@@ -58,4 +75,13 @@ async def bot_analytics_callback(callback: CallbackQuery) -> None:
 
 
 def register_handler(dp: Dispatcher) -> None:
+    """
+    Регистрирует обработчик колбэка "bot_analytics" в диспетчере.
+
+    Args:
+        dp (Dispatcher): объект диспетчера Aiogram.
+
+    Returns:
+        None
+    """
     dp.callback_query.register(bot_analytics_callback, lambda c: c.data == "bot_analytics")
