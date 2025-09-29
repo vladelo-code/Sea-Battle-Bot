@@ -5,7 +5,7 @@ from app.keyboards import bot_difficulty_menu, playing_menu, main_menu
 from app.logger import setup_logger
 from app.state.in_memory import games
 from app.services.bot_game_service import start_bot_game
-from app.messages.texts import YOUR_BOARD_TEXT
+from app.messages.texts import YOUR_BOARD_TEXT, START_BOT_GAME
 
 
 logger = setup_logger(__name__)
@@ -17,7 +17,7 @@ async def play_vs_bot_menu_callback(callback: CallbackQuery) -> None:
     except Exception:
         pass
 
-    await callback.message.edit_text("🤖 Выберите сложность игры против бота:", reply_markup=bot_difficulty_menu())
+    await callback.message.edit_text(START_BOT_GAME, parse_mode='html', reply_markup=bot_difficulty_menu())
 
 
 async def start_bot_game_callback(callback: CallbackQuery) -> None:

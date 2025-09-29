@@ -10,15 +10,17 @@ class BotAI:
     """
     Класс AI бота для Морского боя с тремя уровнями сложности: easy, medium, hard.
     В режиме hard бот использует комбинированную стратегию:
-    - случайные выстрелы,
-    - шахматная схема,
+    - случайные выстрелы
+    - шахматная схема
     - "знание" о координатах кораблей (читерство).
     Также реализована логика добивания корабля с корректным определением линии.
     """
+    # Вероятности для medium режима
+    MEDIUM_RANDOM_PROBABILITY = 0.5  # 50% шанс на случайный выстрел
 
     # Вероятности для hard режима
-    CHEAT_PROBABILITY = 0.1  # 10% вероятность читерства
-    CHECKER_PROBABILITY = 0.5  # 50% вероятность шахматной схемы
+    CHEAT_PROBABILITY = 0.2  # 10% вероятность читерства
+    CHECKER_PROBABILITY = 0.4  # 50% вероятность шахматной схемы
     RANDOM_PROBABILITY = 0.4  # 40% вероятность случайного выбора
 
     def __init__(self, difficulty: str, enemy_board: Optional[List[List[str]]] = None):
@@ -50,8 +52,9 @@ class BotAI:
         self.hit_sequence.clear()
         self.ship_direction = None
 
-    def _neighbors(self, x: int, y: int) -> List[Coordinate]:
-        """Возвращает соседние клетки (вверх, вниз, влево, вправо) для добивания"""
+    @staticmethod
+    def _neighbors(x: int, y: int) -> List[Coordinate]:
+        """Возвращает соседние клетки (вверх, вниз, влево, вправо) для добивания в случайном порядке"""
         res: List[Coordinate] = []
         if x > 0:
             res.append((x - 1, y))
@@ -61,6 +64,7 @@ class BotAI:
             res.append((x, y - 1))
         if y < BOARD_SIZE - 1:
             res.append((x, y + 1))
+        random.shuffle(res)
         return res
 
     def _random_untried(self) -> Coordinate:
@@ -94,8 +98,11 @@ class BotAI:
         if self.difficulty == "hard":
             return self._choose_hard_strategy()
 
-        # 3. medium — шахматные клетки
+        # 3. medium — 50 на 50: шахматные клетки или случайный выстрел
         if self.difficulty == "medium":
+            if random.random() < self.MEDIUM_RANDOM_PROBABILITY:
+                return self._random_untried()
+
             coord = self._random_checker_untried()
             if coord is not None:
                 return coord
@@ -133,7 +140,7 @@ class BotAI:
                 self.reset_ship_hunt()
             else:
                 if len(self.hit_sequence) == 1:
-                    # Первое попадание - добавляем все 4 соседние клетки
+                    # Первое попадание - добавляем все 4 соседние клетки в случайном порядке
                     for nx, ny in self._neighbors(x, y):
                         if (nx, ny) not in self.tried and (nx, ny) not in self.targets:
                             self.targets.append((nx, ny))
