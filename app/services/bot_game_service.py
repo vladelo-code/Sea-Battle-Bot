@@ -48,7 +48,7 @@ def start_bot_game(user_id: int, username: Optional[str], difficulty: str) -> st
         },
     }
 
-    logger.info(f"🤖 Создана игра с ботом. Игрок @{username}, сложность: {difficulty}, game_id={game_id}")
+    logger.info(f"🤖 Игрок @{username} создал игру с ботом, сложность: {difficulty}, game id: {game_id}")
     return game_id
 
 

@@ -15,6 +15,7 @@ logger = setup_logger(__name__)
 
 
 async def bot_analytics_callback(callback: CallbackQuery) -> None:
+    logger.info(f'📈 Игрок @{callback.from_user.username} получил свою статистику.')
     try:
         await callback.answer()
     except Exception:
