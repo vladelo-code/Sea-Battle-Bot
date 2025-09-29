@@ -11,6 +11,7 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     - Рейтинг
     - Рекорды игры
     - Аналитика игр с ботом
+    - Сыграть в музыкальном боте
     - Рассылка (только для админа)
     
     :param is_admin: Показывать ли кнопку рассылки для администратора
@@ -23,10 +24,10 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
         [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")],
         [InlineKeyboardButton(text="🎖️ Рекорды игры", callback_data="show_records")],
-        [InlineKeyboardButton(text="📈 Аналитика игр с ботом", callback_data="bot_analytics")]
+        [InlineKeyboardButton(text="📈 Аналитика игр с ботом", callback_data="bot_analytics")],
+        [InlineKeyboardButton(text="🎸 Сыграть в музыкального бота", url="https://t.me/song_sniper_bot")],
     ]
-    
-    # Добавляем кнопку рассылки только для администратора
+
     if is_admin:
         keyboard_buttons.append([InlineKeyboardButton(text="📢 Рассылка", callback_data="broadcast_menu")])
     
