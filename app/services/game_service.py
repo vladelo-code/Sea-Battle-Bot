@@ -8,6 +8,7 @@ from app.db_utils.stats import update_stats_after_match
 from app.dependencies import db_session
 from app.keyboards import after_game_menu, enemy_board_keyboard
 from app.logger import setup_logger
+from app.services.achievements_service import evaluate_achievements_after_multiplayer_match
 
 from app.messages.texts import (
     GAME_NOT_FOUND, LOSER_SUR, WINNER_SUR, AD_AFTER_GAME, NOT_YOUR_TURN, BAD_COORDINATES, WINNER, LOSER,
@@ -54,8 +55,13 @@ async def handle_surrender(message: Message) -> None:
     logger.info(f'🎉️ Игрок @{winner_username} выиграл, ID игры: {game_id}')
 
     with db_session() as db:
-        update_match_result(db, game_id, winner_id=opponent_id, result="surrender")
+        match = update_match_result(db, game_id, winner_id=opponent_id, result="surrender")
         update_stats_after_match(db, winner_id=opponent_id, loser_id=user_id)
+        try:
+            if match:
+                evaluate_achievements_after_multiplayer_match(db, match)
+        except Exception:
+            pass
 
     # Удаляем игру и все связи
     games.pop(game_id, None)
@@ -144,8 +150,13 @@ async def handle_shot(message: Message) -> None:
 
     if check_victory(board):
         with db_session() as db:
-            update_match_result(db, game_id, winner_id=user_id, result="normal")
+            match = update_match_result(db, game_id, winner_id=user_id, result="normal")
             update_stats_after_match(db, winner_id=user_id, loser_id=opponent_id)
+            try:
+                if match:
+                    evaluate_achievements_after_multiplayer_match(db, match)
+            except Exception:
+                pass
 
         games.pop(game_id, None)
 

@@ -23,14 +23,15 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
         [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
         [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")],
-        [InlineKeyboardButton(text="🎖️ Рекорды игры", callback_data="show_records")],
+        [InlineKeyboardButton(text="🎖 Ачивки", callback_data="achievements_menu")],
+        [InlineKeyboardButton(text="🏆 Рекорды игры", callback_data="show_records")],
         [InlineKeyboardButton(text="📈 Аналитика игр с ботом", callback_data="bot_analytics")],
         [InlineKeyboardButton(text="🎸 Сыграть в музыкального бота", url="https://t.me/song_sniper_bot")],
     ]
 
     if is_admin:
         keyboard_buttons.append([InlineKeyboardButton(text="📢 Рассылка", callback_data="broadcast_menu")])
-    
+
     keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
     return keyboard
 
@@ -168,6 +169,7 @@ def back_to_main_menu() -> InlineKeyboardMarkup:
     )
     return keyboard
 
+
 def bot_analytic_menu() -> InlineKeyboardMarkup:
     """
     Создает простую inline-клавиатуру с кнопками:
@@ -178,6 +180,19 @@ def bot_analytic_menu() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="🤖 Игра с ботом", callback_data="play_vs_bot")],
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
+        ]
+    )
+    return keyboard
+
+
+def achievements_menu() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
+            [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+            [InlineKeyboardButton(text="🤖 Игра с ботом", callback_data="play_vs_bot")],
+            [InlineKeyboardButton(text="🤬 У меня не работает ачивка...", url="https://t.me/vladelo")],
             [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )

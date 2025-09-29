@@ -15,6 +15,7 @@ from app.messages.texts import (
     SUCCESSFUL_SHOT, BAD_SHOT, YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT, YOUR_BOARD_TEXT_AFTER_BAD_SHOT,
     WINNER, LOSER, AD_AFTER_GAME
 )
+from app.services.achievements_service import evaluate_achievements_after_bot_game
 
 logger = setup_logger(__name__)
 
@@ -94,6 +95,10 @@ async def handle_player_shot_vs_bot(message: Message) -> None:
         try:
             with db_session() as db:
                 increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"), is_win=True)
+                try:
+                    evaluate_achievements_after_bot_game(db, user_id)
+                except Exception:
+                    pass
         except Exception as e:
             logger.exception(f"Не удалось обновить bot-статистику (win): {e}")
 
@@ -175,6 +180,10 @@ async def _bot_turn_loop(message: Message, game_id: str) -> None:
                 try:
                     with db_session() as db:
                         increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"), is_win=False)
+                        try:
+                            evaluate_achievements_after_bot_game(db, user_id)
+                        except Exception:
+                            pass
                 except Exception as e:
                     logger.exception(f"Не удалось обновить bot-статистику (lose): {e}")
 
@@ -219,6 +228,10 @@ async def handle_surrender_vs_bot(message: Message) -> None:
         if game:
             with db_session() as db:
                 increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"), is_win=False)
+                try:
+                    evaluate_achievements_after_bot_game(db, user_id)
+                except Exception:
+                    pass
     except Exception as e:
         logger.exception(f"Не удалось обновить bot-статистику (surrender): {e}")
 
