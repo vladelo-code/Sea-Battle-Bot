@@ -7,6 +7,8 @@ from app.game_logic import create_empty_board, place_all_ships, process_shot, ch
 from app.utils.game_id import generate_game_id
 from app.utils.none_username import safe_username
 from app.keyboards import enemy_board_keyboard, after_game_menu
+from app.dependencies import db_session
+from app.db_utils.bot_stats import increment_bot_game_result
 from app.services.bot_ai import BotAI
 from app.logger import setup_logger
 from app.messages.texts import (
@@ -88,6 +90,13 @@ async def handle_player_shot_vs_bot(message: Message) -> None:
 
     if check_victory(bot_board):
         # Игрок победил
+        # Обновляем статистику игр с ботом (победа)
+        try:
+            with db_session() as db:
+                increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"), is_win=True)
+        except Exception as e:
+            logger.exception(f"Не удалось обновить bot-статистику (win): {e}")
+
         games.pop(game_id, None)
         await message.bot.send_message(user_id, WINNER.format(username="vladelo_sea_battle_bot"), parse_mode="html",
                                        reply_markup=ReplyKeyboardRemove())
@@ -162,6 +171,13 @@ async def _bot_turn_loop(message: Message, game_id: str) -> None:
             )
 
             if check_victory(human_board):
+                # Бот победил -> поражение игрока
+                try:
+                    with db_session() as db:
+                        increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"), is_win=False)
+                except Exception as e:
+                    logger.exception(f"Не удалось обновить bot-статистику (lose): {e}")
+
                 games.pop(game_id, None)
                 await message.bot.send_message(user_id, LOSER.format(username="vladelo_sea_battle_bot"),
                                                parse_mode="html",
@@ -196,6 +212,15 @@ async def handle_surrender_vs_bot(message: Message) -> None:
     if not game_id or game_id not in games:
         await message.answer("❗ Игра против бота не найдена.")
         return
+
+    # Сдача — считаем поражением игрока
+    try:
+        game = games.get(game_id)
+        if game:
+            with db_session() as db:
+                increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"), is_win=False)
+    except Exception as e:
+        logger.exception(f"Не удалось обновить bot-статистику (surrender): {e}")
 
     games.pop(game_id, None)
 
