@@ -52,6 +52,40 @@ def join_game(game_id: str, player_id: int, username: str) -> bool:
     return False
 
 
+def create_bot_game(player_id: int, username: str, difficulty: str) -> str:
+    """
+    Создает игру против бота. Второй игрок — виртуальный bot_id. Сохраняет флаг is_bot_game и сложность.
+
+    :param player_id: ID человеческого игрока
+    :param username: username игрока
+    :param difficulty: уровень сложности («easy», «medium», «hard»)
+    :return: game_id
+    """
+    from app.services.bot_ai import BotAI  # локальный импорт, чтобы избежать циклов
+
+    game_id = generate_game_id()
+    human_board = create_empty_board()
+    bot_board = create_empty_board()
+    place_all_ships(human_board)
+    place_all_ships(bot_board)
+
+    bot_id = -abs(hash((player_id, game_id)))
+
+    games[game_id] = {
+        "player1": player_id,
+        "player2": bot_id,
+        "bot_id": bot_id,
+        "is_bot_game": True,
+        "difficulty": difficulty,
+        "boards": {player_id: human_board, bot_id: bot_board},
+        "turn": player_id,
+        "usernames": {player_id: safe_username(username, UNKNOWN_USERNAME_FIRST), bot_id: "vladelo_sea_battle_bot"},
+        "message_ids": {},
+        "bot_state": {"ai": BotAI(difficulty, human_board)},
+    }
+    return game_id
+
+
 def get_game(game_id: str) -> Optional[dict]:
     """
     Возвращает структуру игры по game_id или None если игры нет.

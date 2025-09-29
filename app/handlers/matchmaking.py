@@ -114,6 +114,19 @@ async def join_game_by_id_callback(callback: CallbackQuery) -> None:
     username = callback.from_user.username
     game_id = callback.data.replace("join_game_", "")
 
+    # Проверяем, не играет ли первый игрок уже с ботом
+    target_game = games.get(game_id)
+    if target_game and target_game.get("player1"):
+        player1_id = target_game["player1"]
+        for gid, g in games.items():
+            if gid != game_id and (player1_id == g.get("player1") or player1_id == g.get("player2")) and g.get("is_bot_game"):
+                logger.warning(f"⚠️ Игрок @{username} пытался присоединиться к игре {game_id}, но первый игрок уже играет с ботом в игре {gid}.")
+                try:
+                    await callback.message.edit_text("⚠️ Первый игрок уже играет с ботом. Присоединение невозможно.", reply_markup=main_menu())
+                except Exception:
+                    pass
+                return
+
     result = try_join_game(game_id, user_id, username)
 
     if result == "same_game":

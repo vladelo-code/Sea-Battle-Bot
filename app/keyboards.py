@@ -9,6 +9,8 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     - Присоединиться к игре
     - Мой профиль
     - Рейтинг
+    - Рекорды игры
+    - Аналитика игр с ботом
     - Рассылка (только для админа)
     
     :param is_admin: Показывать ли кнопку рассылки для администратора
@@ -16,10 +18,12 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     keyboard_buttons = [
         [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
         [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+        [InlineKeyboardButton(text="🤖 Игра с ботом", callback_data="play_vs_bot")],
         [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
         [InlineKeyboardButton(text="👤 Мой профиль", callback_data="my_profile")],
         [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")],
-        [InlineKeyboardButton(text="🎖️ Рекорды игры", callback_data="show_records")]
+        [InlineKeyboardButton(text="🎖️ Рекорды игры", callback_data="show_records")],
+        [InlineKeyboardButton(text="📈 Аналитика игр с ботом", callback_data="bot_analytics")]
     ]
     
     # Добавляем кнопку рассылки только для администратора
@@ -30,10 +34,30 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     return keyboard
 
 
+def bot_difficulty_menu() -> InlineKeyboardMarkup:
+    """
+    Меню выбора сложности игры против бота:
+    - Простой
+    - Средний
+    - Сложный
+    - В главное меню
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🟢 Простой", callback_data="bot_easy")],
+            [InlineKeyboardButton(text="🟡 Средний", callback_data="bot_medium")],
+            [InlineKeyboardButton(text="🔴 Сложный", callback_data="bot_hard")],
+            [InlineKeyboardButton(text="📈 Аналитика игр с ботом", callback_data="bot_analytics")],
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")],
+        ]
+    )
+    return keyboard
+
+
 def after_game_menu() -> InlineKeyboardMarkup:
     """
     Создает inline-клавиатуру после-игрового меню с основными командами:
-    - Сыграть в музыкального бота
+    - Сыграть в музыкальном боте
     - Новая игра
     - Присоединиться к игре
     - Главное меню
@@ -43,6 +67,7 @@ def after_game_menu() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🎸 Сыграть в музыкального бота", url="https://t.me/song_sniper_bot")],
             [InlineKeyboardButton(text="🚀 Новая игра", callback_data="new_game")],
             [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
+            [InlineKeyboardButton(text="🤖 Игра с ботом", callback_data="play_vs_bot")],
             [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )
@@ -137,6 +162,21 @@ def back_to_main_menu() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
+        ]
+    )
+    return keyboard
+
+def bot_analytic_menu() -> InlineKeyboardMarkup:
+    """
+    Создает простую inline-клавиатуру с кнопками:
+    - Игра с ботом
+    - Главное меню.
+    Используется в меню аналитики игр с ботом.
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🤖 Игра с ботом", callback_data="play_vs_bot")],
             [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )
