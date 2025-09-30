@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Type
 from sqlalchemy.orm import Session
 
 from app.models import Achievement, PlayerAchievement, Match, BotGameStats
@@ -81,7 +82,7 @@ def evaluate_achievements_after_bot_game(db: Session, player_id: int) -> None:
         _unlock(db, link)
 
 
-def evaluate_achievements_after_multiplayer_match(db: Session, match: Match) -> None:
+def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match]) -> None:
     seed_achievements(db)
 
     achievements_by_code = {a.code: a for a in db.query(Achievement).all()}
