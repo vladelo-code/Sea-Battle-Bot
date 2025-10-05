@@ -6,6 +6,7 @@ from app.models.player import Player
 from app.models.player_stats import PlayerStats
 from app.models.match import Match
 from app.db_utils.stats import get_stats
+from app.config import MOSCOW_TZ
 
 
 def get_or_create_player(db: Session, telegram_id: str, username: str | None = None) -> Player:
@@ -28,15 +29,15 @@ def get_or_create_player(db: Session, telegram_id: str, username: str | None = N
 
     if player:
         # Обновляем дату последнего появления и, при необходимости, username
-        player.last_seen = datetime.now()
+        player.last_seen = datetime.now(MOSCOW_TZ)
         if player.username != username:
             player.username = username
     else:
         player = Player(
             telegram_id=telegram_id,
             username=username,
-            first_seen=datetime.now(),
-            last_seen=datetime.now()
+            first_seen=datetime.now(MOSCOW_TZ),
+            last_seen=datetime.now(MOSCOW_TZ)
         )
         db.add(player)
         db.commit()

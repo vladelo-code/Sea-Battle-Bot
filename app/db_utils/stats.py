@@ -93,14 +93,14 @@ def get_top_and_bottom_players(db: Session, top_limit: int = 10, bottom_limit: i
     )
 
     total_players = db.query(PlayerStats).count()
-    
+
     # Получаем позицию текущего пользователя, если он указан
     current_user_position = None
     if current_user_id:
         # Проверяем, есть ли пользователь в топе
         user_in_top = any(player_id == int(current_user_id) for _, _, player_id in top_players)
         user_in_bottom = any(player_id == int(current_user_id) for _, _, player_id in bottom_players)
-        
+
         if not user_in_top and not user_in_bottom:
             # Получаем позицию пользователя в общем рейтинге
             user_position_query = (
@@ -109,7 +109,7 @@ def get_top_and_bottom_players(db: Session, top_limit: int = 10, bottom_limit: i
                 .filter(PlayerStats.player_id == int(current_user_id))
                 .first()
             )
-            
+
             if user_position_query:
                 # Считаем количество игроков с рейтингом выше
                 higher_rated_count = (
@@ -120,4 +120,4 @@ def get_top_and_bottom_players(db: Session, top_limit: int = 10, bottom_limit: i
                 position = higher_rated_count + 1
                 current_user_position = (user_position_query.username, user_position_query.rating, position)
 
-    return top_players, sorted(bottom_players, reverse=True), total_players, current_user_position
+    return top_players, list(reversed(bottom_players)), total_players, current_user_position

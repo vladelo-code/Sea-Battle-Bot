@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from app.models.match import Match
+from app.config import MOSCOW_TZ
 
 
 def create_match(db: Session, game_id: str, player_1_id: int, player_2_id: int) -> Match:
@@ -19,7 +20,7 @@ def create_match(db: Session, game_id: str, player_1_id: int, player_2_id: int) 
         game_id=game_id,
         player_1_id=player_1_id,
         player_2_id=player_2_id,
-        started_at=datetime.now(),
+        started_at=datetime.now(MOSCOW_TZ),
     )
     db.add(match)
     db.commit()
@@ -46,7 +47,7 @@ def update_match_result(db: Session, game_id: str, winner_id: int = None, result
         match.winner_id = winner_id
     if result:
         match.result = result
-    match.ended_at = ended_at or datetime.now()
+    match.ended_at = ended_at or datetime.now(MOSCOW_TZ)
     db.commit()
     db.refresh(match)
     return match

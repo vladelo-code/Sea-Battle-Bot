@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 # Загружаем переменные окружения из файла .env
 load_dotenv()
@@ -12,6 +13,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Получаем ID администратора для рассылок
 ADMIN_ID = os.getenv("ADMIN_ID")
+
+# Задаем временную зону по МСК
+MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
 # Список ачивок для соответствующего раздела
 ACHIEVEMENT_DEFINITIONS = [
