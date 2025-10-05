@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from app.models.bot_game_stats import BotGameStats
+from app.config import MOSCOW_TZ
 
 
 def get_or_create_bot_stats(db: Session, player_id: int, difficulty: str) -> BotGameStats:
@@ -50,7 +51,7 @@ def increment_bot_game_result(db: Session, player_id: int, difficulty: str, is_w
         stats.wins += 1
     else:
         stats.losses += 1
-    stats.last_played_at = datetime.now()
+    stats.last_played_at = datetime.now(MOSCOW_TZ)
     db.commit()
 
 

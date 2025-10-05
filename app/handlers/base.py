@@ -66,8 +66,11 @@ async def main_menu_callback(callback: CallbackQuery) -> None:
 
     is_admin = str(callback.from_user.id) == ADMIN_ID
 
-    await callback.message.edit_text(START_MESSAGE, reply_markup=main_menu(is_admin=is_admin), parse_mode="HTML",
+    try:
+        await callback.message.edit_text(START_MESSAGE, reply_markup=main_menu(is_admin=is_admin), parse_mode="HTML",
                                      disable_web_page_preview=True)
+    except Exception:
+        pass
 
 
 def register_handler(dp: Dispatcher) -> None:
