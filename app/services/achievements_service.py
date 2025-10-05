@@ -4,88 +4,76 @@ from sqlalchemy.orm import Session
 
 from app.models import Achievement, PlayerAchievement, Match, BotGameStats
 from app.config import ACHIEVEMENT_DEFINITIONS, ADMIN_ID
+from app.config import MOSCOW_TZ
+from app.db_utils.achievements import (
+    seed_achievements,
+    get_achievements_by_code,
+    get_or_create_player_achievement,
+    unlock_achievement,
+)
 
 
-def seed_achievements(db: Session) -> None:
-    existing_codes = {a.code for a in db.query(Achievement).all()}
-    created = False
-    for item in ACHIEVEMENT_DEFINITIONS:
-        if item["code"] in existing_codes:
-            continue
-        db.add(Achievement(
-            code=item["code"],
-            title=item["title"],
-            description=item["description"],
-            created_at=datetime.now(),
-        ))
-        created = True
-    if created:
-        db.commit()
+def _unlock_by_code(db: Session, player_id: int, achievements_by_code: dict[str, Achievement], code: str) -> None:
+    """
+    Разблокирует достижение по его коду для конкретного игрока.
 
+    Функция получает объект достижения по коду, создаёт запись PlayerAchievement,
+    если её ещё нет, и помечает достижение как разблокированное.
 
-def _get_or_create_player_achievement(db: Session, player_id: int, achievement: Achievement) -> PlayerAchievement:
-    link = (
-        db.query(PlayerAchievement)
-        .filter(PlayerAchievement.player_id == player_id, PlayerAchievement.achievement_id == achievement.id)
-        .first()
-    )
-    if link is None:
-        link = PlayerAchievement(player_id=player_id, achievement_id=achievement.id, is_unlocked=False)
-        db.add(link)
-        db.commit()
-        db.refresh(link)
-    return link
+    Args:
+        db (Session): Активная сессия SQLAlchemy для работы с базой данных.
+        player_id (int): ID игрока, которому нужно выдать достижение.
+        achievements_by_code (dict[str, Achievement]): Словарь достижений, где ключ — код, значение — объект Achievement.
+        code (str): Уникальный код достижения (например, "fleet_marathon" или "speedrunner").
 
-
-def _unlock(db: Session, link: PlayerAchievement) -> None:
-    if link.is_unlocked:
+    Returns:
+        None
+    """
+    achievement = achievements_by_code.get(code)
+    if not achievement:
         return
-    link.is_unlocked = True
-    link.unlocked_at = datetime.now()
-    db.commit()
+    link = get_or_create_player_achievement(db, player_id, achievement)
+    unlock_achievement(db, link)
 
 
 def evaluate_achievements_after_bot_game(db: Session, player_id: int) -> None:
-    seed_achievements(db)
+    """
+    Проверяет и назначает достижения после игр с ботами.
+    """
+    seed_achievements(db, ACHIEVEMENT_DEFINITIONS)
+    achievements_by_code = get_achievements_by_code(db)
 
-    achievements_by_code = {a.code: a for a in db.query(Achievement).all()}
+    stats = {s.difficulty: s for s in db.query(BotGameStats).filter_by(player_id=player_id).all()}
+    easy, medium, hard = stats.get("easy"), stats.get("medium"), stats.get("hard")
 
     # 1) full_captain_course — сыграй хотя бы 1 матч на каждом уровне с ботом
-    easy = db.query(BotGameStats).filter_by(player_id=player_id, difficulty="easy").first()
-    medium = db.query(BotGameStats).filter_by(player_id=player_id, difficulty="medium").first()
-    hard = db.query(BotGameStats).filter_by(player_id=player_id, difficulty="hard").first()
-    if easy and easy.games_played > 0 and medium and medium.games_played > 0 and hard and hard.games_played > 0:
-        link = _get_or_create_player_achievement(db, player_id, achievements_by_code["full_captain_course"])
-        _unlock(db, link)
+    if easy and medium and hard and all(s.games_played > 0 for s in [easy, medium, hard]):
+        _unlock_by_code(db, player_id, achievements_by_code, "full_captain_course")
 
     # 2) fleet_marathon — суммарно 50 матчей с ботом
-    total_games = 0
-    for s in db.query(BotGameStats).filter(BotGameStats.player_id == player_id).all():
-        total_games += s.games_played
+    total_games = sum(s.games_played for s in stats.values())
     if total_games >= 50:
-        link = _get_or_create_player_achievement(db, player_id, achievements_by_code["fleet_marathon"])
-        _unlock(db, link)
+        _unlock_by_code(db, player_id, achievements_by_code, "fleet_marathon")
 
     # 7) easy_breeze — 20 побед на easy
     if easy and easy.wins >= 20:
-        link = _get_or_create_player_achievement(db, player_id, achievements_by_code["easy_breeze"])
-        _unlock(db, link)
+        _unlock_by_code(db, player_id, achievements_by_code, "easy_breeze")
 
     # 8) medium_master — 10 побед на medium
     if medium and medium.wins >= 10:
-        link = _get_or_create_player_achievement(db, player_id, achievements_by_code["medium_master"])
-        _unlock(db, link)
+        _unlock_by_code(db, player_id, achievements_by_code, "medium_master")
 
     # 9) hard_master — 5 побед на hard
     if hard and hard.wins >= 5:
-        link = _get_or_create_player_achievement(db, player_id, achievements_by_code["hard_master"])
-        _unlock(db, link)
+        _unlock_by_code(db, player_id, achievements_by_code, "hard_master")
 
 
 def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match]) -> None:
-    seed_achievements(db)
-
-    achievements_by_code = {a.code: a for a in db.query(Achievement).all()}
+    """
+    Проверяет и назначает достижения после мультиплеерных матчей.
+    """
+    seed_achievements(db, ACHIEVEMENT_DEFINITIONS)
+    achievements_by_code = get_achievements_by_code(db)
 
     if not match.ended_at or not match.started_at:
         db.refresh(match)
@@ -94,21 +82,17 @@ def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match
 
     # 3) speedrunner — победа <= 60 секунд
     if match.winner_id and duration and duration <= timedelta(seconds=60) and match.result == "normal":
-        link = _get_or_create_player_achievement(db, match.winner_id, achievements_by_code["speedrunner"])
-        _unlock(db, link)
+        _unlock_by_code(db, match.winner_id, achievements_by_code, "speedrunner")
 
     # 4) night_hunter — матч между 00:00 и 03:00 МСК
     # 5) morning_sailor — матч между 05:00 и 08:00 МСК
-    # Предполагаем, что timestamps в МСК или приводятся к нему заранее.
     if match.started_at:
         hour = match.started_at.hour
         for pid in [match.player_1_id, match.player_2_id]:
             if 0 <= hour < 3:
-                link = _get_or_create_player_achievement(db, pid, achievements_by_code["night_hunter"])
-                _unlock(db, link)
+                _unlock_by_code(db, pid, achievements_by_code, "night_hunter")
             if 5 <= hour < 8:
-                link = _get_or_create_player_achievement(db, pid, achievements_by_code["morning_sailor"])
-                _unlock(db, link)
+                _unlock_by_code(db, pid, achievements_by_code, "morning_sailor")
 
     # 6) win_streak_10 — 10 побед подряд в мультиплеере
     # 10) brave_loser — 5 поражений подряд (без сдачи)
@@ -128,6 +112,7 @@ def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match
 
     for pid in [match.player_1_id, match.player_2_id]:
         recent = _get_recent_results(pid, limit=30)
+
         # победная серия
         best_win_streak = 0
         cur = 0
@@ -138,8 +123,7 @@ def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match
             else:
                 cur = 0
         if best_win_streak >= 10:
-            link = _get_or_create_player_achievement(db, pid, achievements_by_code["win_streak_10"])
-            _unlock(db, link)
+            _unlock_by_code(db, pid, achievements_by_code, "win_streak_10")
 
         # серия поражений без сдачи
         best_lose_streak = 0
@@ -151,8 +135,7 @@ def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match
             else:
                 cur = 0
         if best_lose_streak >= 5:
-            link = _get_or_create_player_achievement(db, pid, achievements_by_code["brave_loser"])
-            _unlock(db, link)
+            _unlock_by_code(db, pid, achievements_by_code, "brave_loser")
 
     # 11) week_streak — каждый день хотя бы 1 матч в течение 7 дней
     def _has_7_day_streak(pid: int) -> bool:
@@ -167,8 +150,7 @@ def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match
         for m in rows:
             d = (m.ended_at or m.started_at).date()
             days.add(str(d))
-        # проверяем наличие хотя бы одного матча в каждый из 7 подряд идущих дней, заканчивающихся сегодня
-        today = datetime.now().date()
+        today = datetime.now(MOSCOW_TZ).date()
         for start_offset in range(0, 21):
             ok = True
             for i in range(7):
@@ -182,18 +164,19 @@ def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match
 
     for pid in [match.player_1_id, match.player_2_id]:
         if _has_7_day_streak(pid):
-            link = _get_or_create_player_achievement(db, pid, achievements_by_code["week_streak"])
-            _unlock(db, link)
+            _unlock_by_code(db, pid, achievements_by_code, "week_streak")
 
     # 12) fan_dev — сыграй матч с разработчиком (@vladelo)
     if int(ADMIN_ID) in [match.player_1_id, match.player_2_id]:
         for pid in [match.player_1_id, match.player_2_id]:
-            link = _get_or_create_player_achievement(db, pid, achievements_by_code["fan_dev"])
-            _unlock(db, link)
+            _unlock_by_code(db, pid, achievements_by_code, "fan_dev")
 
 
 def get_player_achievements(db: Session, player_id: int) -> list[dict]:
-    seed_achievements(db)
+    """
+    Возвращает все достижения с флагом разблокировки.
+    """
+    seed_achievements(db, ACHIEVEMENT_DEFINITIONS)
     achievements = db.query(Achievement).all()
     links = db.query(PlayerAchievement).filter(PlayerAchievement.player_id == player_id).all()
     by_id = {l.achievement_id: l for l in links}
