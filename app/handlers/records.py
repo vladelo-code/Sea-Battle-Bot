@@ -83,7 +83,7 @@ async def show_records_callback(callback: CallbackQuery) -> None:
                         ended_at = match.ended_at
                     
                     duration_seconds = (ended_at - started_at).total_seconds()
-                    fastest_date = ended_at.strftime("%d.%m.%Y в %H:%M")
+                    fastest_date = ended_at.strftime("%d.%m.%Y в %H:%M по МСК")
                     
                     records_text += f"⚡ <b>Самая быстрая игра:</b>\n"
                     records_text += f"⏱️ Время: {int(duration_seconds)} сек.\n"
