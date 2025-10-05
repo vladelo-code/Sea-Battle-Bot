@@ -5,7 +5,7 @@ from datetime import datetime
 from app.models.player import Player
 from app.models.player_stats import PlayerStats
 from app.models.match import Match
-from app.db_utils.stats import get_stats
+from app.db_utils.stats import get_stats, get_or_create_stats
 from app.config import MOSCOW_TZ
 
 
@@ -19,6 +19,7 @@ def get_or_create_player(db: Session, telegram_id: str, username: str | None = N
 
     Если игрок не найден:
       - создается новый игрок с текущим временем регистрации и последнего появления
+      - для созданного игрока создается пустая строка статистики (чтобы он учитывался в общем рейтинге)
 
     :param db: Сессия SQLAlchemy.
     :param telegram_id: Telegram ID пользователя.
@@ -42,6 +43,9 @@ def get_or_create_player(db: Session, telegram_id: str, username: str | None = N
         db.add(player)
         db.commit()
         db.refresh(player)
+
+        # Создаём статистику игроку сразу при регистрации
+        get_or_create_stats(db, player_id=int(player.telegram_id))
 
     db.commit()
     db.refresh(player)
