@@ -55,11 +55,30 @@ async def create_game_callback(callback: CallbackQuery) -> None:
         # Сохраняем message_id сообщения о создании игры для последующего удаления
         games[game_id]["creation_message_id"] = callback.message.message_id
     else:
-        logger.warning(f"⚠️ Игрок @{username} пытался создать ещё игру, не закончив предыдущую.")
-        try:
-            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu(user_id))
-        except Exception:
-            pass
+        # Проверяем, не существует ли уже созданная пользователем игра, ожидающая второго игрока
+        existing_waiting_game_id = None
+        for gid, g in games.items():
+            if g.get("player1") == user_id and not g.get("player2"):
+                existing_waiting_game_id = gid
+                break
+
+        if existing_waiting_game_id:
+            # Повторно показываем исходное сообщение с кодом уже созданной игры
+            try:
+                await callback.message.edit_text(
+                    STARTING_GAME.format(game_id=existing_waiting_game_id),
+                    reply_markup=connect_menu(),
+                    parse_mode="html",
+                )
+            except Exception:
+                pass
+        else:
+            # Если у пользователя действительно активная игра (оба игрока есть) — показываем ошибку
+            logger.warning(f"⚠️ Игрок @{username} пытался создать ещё игру, не закончив предыдущую.")
+            try:
+                await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu(user_id))
+            except Exception:
+                pass
 
 
 async def join_game_callback(callback: CallbackQuery) -> None:
