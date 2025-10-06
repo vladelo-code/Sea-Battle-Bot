@@ -14,7 +14,7 @@ from app.services.achievements_service import evaluate_achievements_after_bot_ga
 from app.logger import setup_logger
 from app.messages.texts import (
     SUCCESSFUL_SHOT, BAD_SHOT, YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT, YOUR_BOARD_TEXT_AFTER_BAD_SHOT,
-    WINNER, LOSER, AD_AFTER_GAME
+    WINNER, LOSER, AD_AFTER_GAME, BOT_USERNAME, LOSER_SUR, INVALID_GAME_DATA, BAD_COORDINATES, NOT_YOUR_TURN
 )
 
 logger = setup_logger(__name__)
@@ -64,14 +64,14 @@ async def handle_player_shot_vs_bot(message: Message) -> None:
             break
 
     if not game_id or game_id not in games:
-        await message.answer("❗ Игра против бота не найдена.")
+        await message.answer(INVALID_GAME_DATA)
         return
 
     game = games[game_id]
     bot_id = game["bot_id"]
 
     if game["turn"] != user_id:
-        await message.answer("❗ Сейчас не ваш ход.")
+        await message.answer(NOT_YOUR_TURN)
         return
 
     # Парс координат
@@ -82,7 +82,7 @@ async def handle_player_shot_vs_bot(message: Message) -> None:
         if not (0 <= x < 10 and 0 <= y < 10):
             raise ValueError
     except Exception:
-        await message.answer("❗ Неверные координаты. Используйте формат A1.")
+        await message.answer(BAD_COORDINATES)
         return
 
     # Игрок стреляет по доске бота
@@ -102,10 +102,15 @@ async def handle_player_shot_vs_bot(message: Message) -> None:
         except Exception as e:
             logger.exception(f"Не удалось обновить bot-статистику (win): {e}")
 
+        human_board = game["boards"].get(bot_id, '')
+
         games.pop(game_id, None)
-        await message.bot.send_message(user_id, WINNER.format(username="vladelo_sea_battle_bot"), parse_mode="html",
+        await message.bot.send_message(user_id,
+                                       WINNER.format(board=print_board(human_board), username=BOT_USERNAME),
+                                       parse_mode="html",
                                        reply_markup=ReplyKeyboardRemove())
-        await message.bot.send_message(user_id, AD_AFTER_GAME, parse_mode="html", disable_web_page_preview=True,
+        await message.bot.send_message(user_id,
+                                       AD_AFTER_GAME, parse_mode="html", disable_web_page_preview=True,
                                        reply_markup=after_game_menu())
         return
 
@@ -152,18 +157,18 @@ async def _bot_turn_loop(message: Message, game_id: str) -> None:
         # Сохраняем состояние доски до выстрела для определения уничтожения корабля
         board_before = [row[:] for row in human_board]
         result = process_shot(human_board, x, y)
-        
+
         # Определяем, был ли корабль уничтожен, сравнивая состояние доски до и после выстрела
         ship_destroyed = False
         if result:  # Если попали
             # Проверяем, появились ли новые "❌" вокруг попадания (признак уничтожения корабля)
             for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
                 nx, ny = x + dx, y + dy
-                if (0 <= nx < 10 and 0 <= ny < 10 and 
-                    board_before[nx][ny] == "⬜" and human_board[nx][ny] == "❌"):
+                if (0 <= nx < 10 and 0 <= ny < 10 and
+                        board_before[nx][ny] == "⬜" and human_board[nx][ny] == "❌"):
                     ship_destroyed = True
                     break
-        
+
         ai.process_result((x, y), result, ship_destroyed)
         await asyncio.sleep(0.9)
         if result is True:
@@ -179,7 +184,8 @@ async def _bot_turn_loop(message: Message, game_id: str) -> None:
                 # Бот победил -> поражение игрока
                 try:
                     with db_session() as db:
-                        increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"), is_win=False)
+                        increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"),
+                                                  is_win=False)
                         try:
                             evaluate_achievements_after_bot_game(db, user_id)
                         except Exception:
@@ -187,8 +193,11 @@ async def _bot_turn_loop(message: Message, game_id: str) -> None:
                 except Exception as e:
                     logger.exception(f"Не удалось обновить bot-статистику (lose): {e}")
 
+                human_board = game["boards"].get(bot_id, '')
+
                 games.pop(game_id, None)
-                await message.bot.send_message(user_id, LOSER.format(username="vladelo_sea_battle_bot"),
+                await message.bot.send_message(user_id,
+                                               LOSER.format(board=print_board(human_board), username=BOT_USERNAME),
                                                parse_mode="html",
                                                reply_markup=ReplyKeyboardRemove())
                 await message.bot.send_message(user_id, AD_AFTER_GAME, parse_mode="html",
@@ -219,7 +228,7 @@ async def handle_surrender_vs_bot(message: Message) -> None:
             break
 
     if not game_id or game_id not in games:
-        await message.answer("❗ Игра против бота не найдена.")
+        await message.answer(INVALID_GAME_DATA)
         return
 
     # Сдача — считаем поражением игрока
@@ -227,7 +236,8 @@ async def handle_surrender_vs_bot(message: Message) -> None:
         game = games.get(game_id)
         if game:
             with db_session() as db:
-                increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"), is_win=False)
+                increment_bot_game_result(db, player_id=user_id, difficulty=game.get("difficulty", "easy"),
+                                          is_win=False)
                 try:
                     evaluate_achievements_after_bot_game(db, user_id)
                 except Exception:
@@ -235,11 +245,20 @@ async def handle_surrender_vs_bot(message: Message) -> None:
     except Exception as e:
         logger.exception(f"Не удалось обновить bot-статистику (surrender): {e}")
 
+    human_board = ''
+    try:
+        game = games.get(game_id)
+        bot_id = game["bot_id"]
+        if game:
+            human_board = game["boards"].get(bot_id, '')
+    except Exception:
+        pass
+
     games.pop(game_id, None)
 
     await message.bot.send_message(
         user_id,
-        "🏳️ Поражение! Вы сдались в игре против бота!",
+        LOSER_SUR.format(board=print_board(human_board), username=BOT_USERNAME),
         parse_mode="html",
         reply_markup=ReplyKeyboardRemove()
     )

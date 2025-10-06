@@ -63,12 +63,15 @@ async def handle_surrender(message: Message) -> None:
         except Exception:
             pass
 
+    winner_board = game["boards"].get(opponent_id)
+    loser_board = game["boards"].get(user_id)
+
     # Удаляем игру и все связи
     games.pop(game_id, None)
 
     await message.bot.send_message(
         user_id,
-        LOSER_SUR.format(username=winner_username),
+        LOSER_SUR.format(board=print_board(winner_board), username=winner_username),
         parse_mode="html",
         reply_markup=ReplyKeyboardRemove()
     )
@@ -83,7 +86,7 @@ async def handle_surrender(message: Message) -> None:
 
     await message.bot.send_message(
         opponent_id,
-        WINNER_SUR.format(username=loser_username),
+        WINNER_SUR.format(board=print_board(loser_board), username=loser_username),
         parse_mode="html",
         reply_markup=ReplyKeyboardRemove()
     )
@@ -158,11 +161,14 @@ async def handle_shot(message: Message) -> None:
             except Exception:
                 pass
 
+        winner_board = game["boards"].get(user_id)
+        loser_board = game["boards"].get(opponent_id)
+
         games.pop(game_id, None)
 
         await message.bot.send_message(
             opponent_id,
-            LOSER.format(username=current_username),
+            LOSER.format(board=print_board(winner_board), username=current_username),
             parse_mode="html",
             reply_markup=ReplyKeyboardRemove()
         )
@@ -177,7 +183,7 @@ async def handle_shot(message: Message) -> None:
 
         await message.bot.send_message(
             user_id,
-            WINNER.format(username=opponent_username),
+            WINNER.format(board=print_board(loser_board), username=opponent_username),
             parse_mode="html",
             reply_markup=ReplyKeyboardRemove()
         )
