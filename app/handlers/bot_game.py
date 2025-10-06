@@ -70,6 +70,11 @@ async def start_bot_game_callback(callback: CallbackQuery) -> None:
                 await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=main_menu())
                 return
 
+    # Перед стартом игры с ботом удаляем все созданные пользователем PvP-игры без второго игрока
+    to_delete = [gid for gid, g in games.items() if g.get("player1") == user_id and not g.get("player2") and not g.get("is_bot_game")]
+    for gid in to_delete:
+        games.pop(gid, None)
+
     game_id = start_bot_game(user_id=user_id, username=username, difficulty=difficulty)
 
     # Отправляем стартовое поле и клавиатуру выстрелов по боту

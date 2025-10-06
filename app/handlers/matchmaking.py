@@ -57,7 +57,7 @@ async def create_game_callback(callback: CallbackQuery) -> None:
     else:
         logger.warning(f"⚠️ Игрок @{username} пытался создать ещё игру, не закончив предыдущую.")
         try:
-            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu(user_id))
         except Exception:
             pass
 
@@ -90,12 +90,12 @@ async def join_game_callback(callback: CallbackQuery) -> None:
         logger.warning(
             f"⚠️ Игрок @{username} пытался присоединиться к игре, уже участвуя в активной игре {active_game}.")
         try:
-            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu(user_id))
         except Exception:
             pass
     else:
         user_game_requests[user_id] = None
-        await callback.message.edit_text(CHOOSE_CONNECTING_GAME, reply_markup=current_game_menu())
+        await callback.message.edit_text(CHOOSE_CONNECTING_GAME, reply_markup=current_game_menu(user_id))
 
 
 async def join_game_by_id_callback(callback: CallbackQuery) -> None:
@@ -132,7 +132,7 @@ async def join_game_by_id_callback(callback: CallbackQuery) -> None:
     if result == "same_game":
         logger.warning(f"⚠️ Игрок @{username} пытался подключиться к своей же игре с ID: {game_id}")
         try:
-            await callback.message.edit_text(JOIN_CONNECTING_GAME_ERROR, reply_markup=current_game_menu())
+            await callback.message.edit_text(JOIN_CONNECTING_GAME_ERROR, reply_markup=current_game_menu(user_id))
         except Exception:
             pass
 
@@ -145,7 +145,7 @@ async def join_game_by_id_callback(callback: CallbackQuery) -> None:
     elif result == "already_in_active_game":
         logger.warning(f"⚠️ Игрок @{username} пытался присоединиться к игре, уже участвуя в активной игре.")
         try:
-            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu())
+            await callback.message.edit_text(STARTING_GAME_ERROR, reply_markup=current_game_menu(user_id))
         except Exception:
             pass
 
@@ -213,7 +213,7 @@ async def refresh_games_callback(callback: CallbackQuery) -> None:
     """
     try:
         await callback.answer()
-        await callback.message.edit_text(CHOOSE_CONNECTING_GAME, reply_markup=current_game_menu())
+        await callback.message.edit_text(CHOOSE_CONNECTING_GAME, reply_markup=current_game_menu(callback.from_user.id))
     except Exception:
         pass
 

@@ -121,7 +121,7 @@ def playing_menu(game_id: str, player_id: int) -> ReplyKeyboardMarkup:
     return keyboard
 
 
-def current_game_menu() -> InlineKeyboardMarkup:
+def current_game_menu(user_id: int | None = None) -> InlineKeyboardMarkup:
     """
     Создает inline-клавиатуру со списком всех активных игр.
     Добавляет кнопки:
@@ -132,9 +132,19 @@ def current_game_menu() -> InlineKeyboardMarkup:
     """
     keyboard_buttons = []
 
-    # Добавляем кнопки с ID игр
-    for game in games:
-        keyboard_buttons.append([InlineKeyboardButton(text=f"{game}", callback_data=f"join_game_{game}")])
+    # Добавляем кнопки только с доступными для подключения играми
+    for gid, game in games.items():
+        # Пропускаем игры, где уже есть два игрока
+        if game.get("player1") and game.get("player2") and not game.get("is_bot_game"):
+            continue
+
+        # Пропускаем собственные игры пользователя (если передан user_id)
+        if user_id is not None and user_id == game.get("player1"):
+            continue
+
+        # В меню присоединения показываем только PvP-игры, где есть только первый игрок
+        if not game.get("is_bot_game") and game.get("player1") and not game.get("player2"):
+            keyboard_buttons.append([InlineKeyboardButton(text=f"{gid}", callback_data=f"join_game_{gid}")])
 
     # Добавляем навигационные кнопки
     keyboard_buttons.extend([
