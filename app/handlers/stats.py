@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
 from aiogram.types import CallbackQuery
 
-from app.keyboards import rating_menu, back_to_main_menu
+from app.keyboards import rating_menu, back_to_main_menu, profile_menu
 from app.logger import setup_logger
 from app.db_utils.stats import get_top_and_bottom_players
 from app.db_utils.player import get_player_by_telegram_id, get_extended_stats
@@ -63,7 +63,7 @@ async def stats_callback(callback: CallbackQuery) -> None:
                 total_time=int(stats["total_time"] // 60),
             ),
             parse_mode='HTML',
-            reply_markup=back_to_main_menu()
+            reply_markup=profile_menu()
         )
 
 
