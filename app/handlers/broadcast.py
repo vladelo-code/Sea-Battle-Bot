@@ -1,12 +1,15 @@
+import os
 import asyncio
+from datetime import datetime
 from sqlalchemy import select
 from aiogram import Dispatcher
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
+from aiogram.types import FSInputFile
 
 from app.keyboards import broadcast_menu, broadcast_confirm_menu, back_to_main_menu
 from app.logger import setup_logger
-from app.config import ADMIN_ID
+from app.config import ADMIN_ID, MOSCOW_TZ
 from app.dependencies import db_session
 from app.models.player import Player
 from app.messages.texts import (
@@ -248,6 +251,39 @@ async def cancel_broadcast_callback(callback: CallbackQuery) -> None:
     )
 
 
+async def check_logs_callback(callback: CallbackQuery) -> None:
+    """
+    Отправляет администратору файл логов bot.log.
+
+    :param callback: Объект callback-запроса от пользователя.
+    """
+    if not await is_admin(callback.from_user.id):
+        await callback.answer("❌ У вас нет прав для доступа к этой функции!", show_alert=True)
+        return
+
+    log_path = "bot.log"
+
+    if not os.path.exists(log_path):
+        await callback.answer("⚠️ Файл логов не найден!", show_alert=True)
+        return
+
+    try:
+        await callback.answer()
+
+        log_file = FSInputFile(log_path)
+        now_moscow = datetime.now(MOSCOW_TZ).strftime("%d.%m.%Y, %H:%M")
+
+        await callback.message.answer_document(
+            document=log_file,
+            caption=f"📜 Актуальные логи бота (на {now_moscow})"
+        )
+        logger.info(f"📤 Админ @{callback.from_user.username} получил файл логов")
+
+    except Exception as e:
+        logger.error(f"Ошибка при отправке логов: {e}")
+        await callback.message.answer(f"❌ Не удалось отправить файл логов: {e}")
+
+
 def register_handler(dp: Dispatcher) -> None:
     """
     Регистрирует обработчики для рассылки.
@@ -256,6 +292,7 @@ def register_handler(dp: Dispatcher) -> None:
     """
     # Callback-обработчики
     dp.callback_query.register(broadcast_menu_callback, lambda c: c.data == "broadcast_menu")
+    dp.callback_query.register(check_logs_callback, lambda c: c.data == "check_logs")
     dp.callback_query.register(new_message_callback, lambda c: c.data == "new_broadcast_message")
     dp.callback_query.register(send_broadcast_callback, lambda c: c.data == "send_broadcast")
     dp.callback_query.register(cancel_broadcast_callback, lambda c: c.data == "cancel_broadcast")

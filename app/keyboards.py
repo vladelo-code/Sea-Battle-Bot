@@ -274,11 +274,13 @@ def broadcast_menu() -> InlineKeyboardMarkup:
     """
     Создает inline-клавиатуру меню рассылки:
     - Новое сообщение
+    - Посмотреть логи
     - Главное меню
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📝 Новое сообщение", callback_data="new_broadcast_message")],
+            [InlineKeyboardButton(text="🗄️ Посмотреть логи", callback_data="check_logs")],
             [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
         ]
     )
