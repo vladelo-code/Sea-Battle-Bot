@@ -12,7 +12,8 @@ from app.services.achievements_service import evaluate_achievements_after_multip
 
 from app.messages.texts import (
     GAME_NOT_FOUND, LOSER_SUR, WINNER_SUR, AD_AFTER_GAME, NOT_YOUR_TURN, BAD_COORDINATES, WINNER, LOSER,
-    SUCCESSFUL_SHOT, YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT, BAD_SHOT, YOUR_BOARD_TEXT_AFTER_BAD_SHOT
+    SUCCESSFUL_SHOT, YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT, BAD_SHOT, YOUR_BOARD_TEXT_AFTER_BAD_SHOT,
+    ALREADY_USED_COORDINATES
 )
 
 logger = setup_logger(__name__)
@@ -144,6 +145,13 @@ async def handle_shot(message: Message) -> None:
 
     opponent_id = game["player1"] if game["turn"] == game["player2"] else game["player2"]
     board = game["boards"][opponent_id]
+
+    # Проверяем, стрелял ли игрок уже по этой клетке
+    cell_value = board[x][y]
+    if cell_value in ("❌", "💥"):
+        await message.answer(ALREADY_USED_COORDINATES)
+        return
+
     hit = process_shot(board, x, y)
 
     # Получаем username'ы из словаря, только для сообщений

@@ -14,7 +14,8 @@ from app.services.achievements_service import evaluate_achievements_after_bot_ga
 from app.logger import setup_logger
 from app.messages.texts import (
     SUCCESSFUL_SHOT, BAD_SHOT, YOUR_BOARD_TEXT_AFTER_SUCCESS_SHOT, YOUR_BOARD_TEXT_AFTER_BAD_SHOT,
-    WINNER, LOSER, AD_AFTER_GAME, BOT_USERNAME, LOSER_SUR, INVALID_GAME_DATA, BAD_COORDINATES, NOT_YOUR_TURN
+    WINNER, LOSER, AD_AFTER_GAME, BOT_USERNAME, LOSER_SUR, INVALID_GAME_DATA, BAD_COORDINATES, NOT_YOUR_TURN,
+    ALREADY_USED_COORDINATES
 )
 
 logger = setup_logger(__name__)
@@ -87,6 +88,13 @@ async def handle_player_shot_vs_bot(message: Message) -> None:
 
     # Игрок стреляет по доске бота
     bot_board = game["boards"][bot_id]
+
+    # Проверяем, стрелял ли игрок уже по этой клетке
+    cell_value = bot_board[x][y]
+    if cell_value in ("❌", "💥"):
+        await message.answer(ALREADY_USED_COORDINATES)
+        return
+
     hit = process_shot(bot_board, x, y)
 
     if check_victory(bot_board):
