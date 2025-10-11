@@ -10,6 +10,7 @@ from app.db_utils.achievements import (
     get_achievements_by_code,
     get_or_create_player_achievement,
     unlock_achievement,
+    get_achievement_percentages,
 )
 
 
@@ -174,12 +175,16 @@ def evaluate_achievements_after_multiplayer_match(db: Session, match: Type[Match
 
 def get_player_achievements(db: Session, player_id: int) -> list[dict]:
     """
-    Возвращает все достижения с флагом разблокировки.
+    Возвращает все достижения с флагом разблокировки и статистикой процентов.
     """
     seed_achievements(db, ACHIEVEMENT_DEFINITIONS)
     achievements = db.query(Achievement).all()
     links = db.query(PlayerAchievement).filter(PlayerAchievement.player_id == player_id).all()
     by_id = {l.achievement_id: l for l in links}
+    
+    # Получаем проценты для всех ачивок
+    percentages = get_achievement_percentages(db)
+    
     result: list[dict] = []
     for a in achievements:
         link = by_id.get(a.id)
@@ -189,5 +194,6 @@ def get_player_achievements(db: Session, player_id: int) -> list[dict]:
             "description": a.description,
             "is_unlocked": bool(link.is_unlocked) if link else False,
             "unlocked_at": link.unlocked_at if link else None,
+            "percentage": percentages.get(str(a.code), 0.0),
         })
     return result

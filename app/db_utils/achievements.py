@@ -73,3 +73,40 @@ def unlock_achievement(db: Session, link: PlayerAchievement) -> None:
     link.is_unlocked = True
     link.unlocked_at = datetime.now(MOSCOW_TZ)
     db.commit()
+
+
+def get_achievement_percentages(db: Session) -> Dict[str, float]:
+    """
+    Возвращает процент игроков, у которых есть каждая ачивка.
+    
+    Returns:
+        Dict[str, float]: Словарь {код_ачивки: процент_игроков}
+    """
+    from app.models import Player
+    
+    # Получаем общее количество игроков
+    total_players = db.query(Player).count()
+    
+    if total_players == 0:
+        return {}
+    
+    # Получаем все ачивки
+    achievements = db.query(Achievement).all()
+    result = {}
+    
+    for achievement in achievements:
+        # Считаем количество игроков с разблокированной ачивкой
+        unlocked_count = (
+            db.query(PlayerAchievement)
+            .filter(
+                PlayerAchievement.achievement_id == achievement.id,
+                PlayerAchievement.is_unlocked == True
+            )
+            .count()
+        )
+        
+        # Вычисляем процент
+        percentage = (unlocked_count / total_players) * 100
+        result[achievement.code] = round(percentage, 1)
+    
+    return result

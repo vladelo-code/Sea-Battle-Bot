@@ -22,6 +22,7 @@ def _format_achievements(items: list[dict]) -> str:
               - title (str): название ачивки.
               - description (str): описание.
               - is_unlocked (bool): получена ли ачивка.
+              - percentage (float): процент игроков с этой ачивкой.
 
     Returns:
         str: Сформированная строка с ачивками, готовая для отправки пользователю.
@@ -31,7 +32,11 @@ def _format_achievements(items: list[dict]) -> str:
         mark = "✅" if i.get("is_unlocked") else "❌"
         title = i.get("title") or i.get("code")
         desc = i.get("description") or ""
-        lines.append(f"\n<b>{idx}. {title}</b> — {mark}\n{desc}")
+        percentage = i.get("percentage", 0.0)
+        
+        lines.append(f"\n<b>{idx}. {title}</b> — {mark}")
+        lines.append(f"{desc}")
+        lines.append(f"📊 <i>У {percentage}% игроков уже есть эта ачивка</i>")
     return "\n".join(lines)
 
 
