@@ -7,7 +7,6 @@ from app.state.in_memory import games
 from app.messages.texts import UNKNOWN_USERNAME_FIRST, UNKNOWN_USERNAME_SECOND
 
 
-
 def create_game(player_id: int, username: str) -> str:
     """
     Создает новую игру с игроком player_id и его username.
@@ -135,3 +134,10 @@ def delete_game(game_id: str) -> None:
     """
     if game_id in games:
         del games[game_id]
+
+    # Также удаляем таймер жалобы, если он был активен
+    from app.state.in_memory import complaint_timers
+    if game_id in complaint_timers:
+        timer_task = complaint_timers[game_id]
+        timer_task.cancel()
+        del complaint_timers[game_id]

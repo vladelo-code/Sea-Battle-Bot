@@ -4,6 +4,7 @@ from aiogram.types import Message
 from app.state.constants import COORDINATES
 from app.services.game_service import handle_surrender, handle_shot
 from app.services.bot_game_service import handle_player_shot_vs_bot, handle_surrender_vs_bot
+from app.services.complaint_service import handle_complaint
 from app.state.in_memory import games
 
 
@@ -46,6 +47,13 @@ async def shot_command_coord(message: Message) -> None:
             await handle_surrender_vs_bot(message)
         else:
             await handle_surrender(message)
+    elif message.text == "⚠️ Пожаловаться на игрока":
+        if is_bot_game:
+            await message.answer("❗ Жалоба недоступна в играх с ботом.")
+            return
+        else:
+            await handle_complaint(message.bot, message.from_user.id)
+            return
     else:
         if is_bot_game:
             await handle_player_shot_vs_bot(message)
@@ -55,9 +63,10 @@ async def shot_command_coord(message: Message) -> None:
 
 def register_handler(dp: Dispatcher) -> None:
     """
-    Регистрирует обработчики сообщений для координатных выстрелов и команды "Сдаться".
+    Регистрирует обработчики сообщений для координатных выстрелов, команды "Сдаться" и жалоб.
 
     :param dp: Диспетчер бота.
     """
     dp.message.register(shot_command_coord, lambda message: message.text == "🏳️ Сдаться")
+    dp.message.register(shot_command_coord, lambda message: message.text == "⚠️ Пожаловаться на игрока")
     dp.message.register(shot_command_coord, lambda message: message.text in COORDINATES)

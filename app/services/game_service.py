@@ -9,6 +9,7 @@ from app.dependencies import db_session
 from app.keyboards import after_game_menu, enemy_board_keyboard
 from app.logger import setup_logger
 from app.services.achievements_service import evaluate_achievements_after_multiplayer_match
+from app.services.complaint_service import cancel_complaint_timer, notify_complaint_cancelled
 
 from app.messages.texts import (
     GAME_NOT_FOUND, LOSER_SUR, WINNER_SUR, AD_AFTER_GAME, NOT_YOUR_TURN, BAD_COORDINATES, WINNER, LOSER,
@@ -54,6 +55,9 @@ async def handle_surrender(message: Message) -> None:
 
     logger.info(f'🏳️ Игрок @{loser_username} сдался, ID игры: {game_id}')
     logger.info(f'🎉️ Игрок @{winner_username} выиграл, ID игры: {game_id}')
+
+    # Отменяем таймер жалобы, если он был активен
+    await cancel_complaint_timer(game_id)
 
     with db_session() as db:
         match = update_match_result(db, game_id, winner_id=opponent_id, result="surrender")
@@ -153,6 +157,13 @@ async def handle_shot(message: Message) -> None:
         return
 
     hit = process_shot(board, x, y)
+
+    # Отменяем таймер жалобы, если он был активен
+    was_cancelled = await cancel_complaint_timer(game_id)
+
+    # Уведомляем ТОЛЬКО если таймер действительно существовал и был отменён.
+    if was_cancelled and game_id in games:
+        await notify_complaint_cancelled(message.bot, game_id, current_player_id=user_id)
 
     # Получаем username'ы из словаря, только для сообщений
     usernames = game.get("usernames", {})
