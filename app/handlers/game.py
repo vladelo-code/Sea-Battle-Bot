@@ -47,7 +47,7 @@ async def shot_command_coord(message: Message) -> None:
             await handle_surrender_vs_bot(message)
         else:
             await handle_surrender(message)
-    elif message.text == "⚠️ Пожаловаться на игрока":
+    elif message.text == "⚠️ Пожаловаться на бездействие":
         if is_bot_game:
             await message.answer("❗ Жалоба недоступна в играх с ботом.")
             return
@@ -68,5 +68,5 @@ def register_handler(dp: Dispatcher) -> None:
     :param dp: Диспетчер бота.
     """
     dp.message.register(shot_command_coord, lambda message: message.text == "🏳️ Сдаться")
-    dp.message.register(shot_command_coord, lambda message: message.text == "⚠️ Пожаловаться на игрока")
+    dp.message.register(shot_command_coord, lambda message: message.text == "⚠️ Пожаловаться на бездействие")
     dp.message.register(shot_command_coord, lambda message: message.text in COORDINATES)
