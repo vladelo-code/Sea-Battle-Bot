@@ -115,7 +115,7 @@ def playing_menu(game_id: str, player_id: int) -> ReplyKeyboardMarkup:
                      ]
                      for row in range(10)
                  ] + [
-                     [KeyboardButton(text="🏳️ Сдаться"), KeyboardButton(text="⚠️ Пожаловаться на игрока")]
+                     [KeyboardButton(text="🏳️ Сдаться"), KeyboardButton(text="⚠️ Пожаловаться на бездействие")]
                  ],
     )
     return keyboard
@@ -264,8 +264,7 @@ def enemy_board_keyboard(game_id: str, opponent_id: int) -> ReplyKeyboardMarkup:
                      ]
                      for row in range(10)
                  ] + [
-                     # [KeyboardButton(text="🏳️ Сдаться")]
-                     [KeyboardButton(text="🏳️ Сдаться"), KeyboardButton(text="⚠️ Пожаловаться на игрока")]
+                     [KeyboardButton(text="🏳️ Сдаться"), KeyboardButton(text="⚠️ Пожаловаться на бездействие")]
                  ],
     )
     return keyboard
