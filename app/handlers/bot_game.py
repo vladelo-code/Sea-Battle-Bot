@@ -6,6 +6,8 @@ from app.logger import setup_logger
 from app.state.in_memory import games
 from app.services.bot_game_service import start_bot_game
 from app.messages.texts import YOUR_BOARD_TEXT, START_BOT_GAME, STARTING_GAME_ERROR, INVALID_DIFFICULT_MODE
+from app.dependencies import db_session
+from app.db_utils.donor import is_donor
 
 logger = setup_logger(__name__)
 
@@ -26,7 +28,14 @@ async def play_vs_bot_menu_callback(callback: CallbackQuery) -> None:
     except Exception:
         pass
 
-    await callback.message.edit_text(START_BOT_GAME, parse_mode='HTML', reply_markup=bot_difficulty_menu())
+    # Проверяем статус донора
+    with db_session() as db:
+        donor_status = is_donor(db, callback.from_user.id)
+    
+    # Выбираем соответствующую клавиатуру
+    keyboard = bot_difficulty_menu(is_donor=donor_status)
+    
+    await callback.message.edit_text(START_BOT_GAME, parse_mode='HTML', reply_markup=keyboard)
 
 
 async def start_bot_game_callback(callback: CallbackQuery) -> None:
@@ -55,6 +64,7 @@ async def start_bot_game_callback(callback: CallbackQuery) -> None:
         "bot_easy": "easy",
         "bot_medium": "medium",
         "bot_hard": "hard",
+        "bot_super_hard": "super_hard",
     }.get(callback.data)
 
     if not difficulty:
@@ -107,4 +117,4 @@ def register_handler(dp: Dispatcher) -> None:
         None
     """
     dp.callback_query.register(play_vs_bot_menu_callback, lambda c: c.data == "play_vs_bot")
-    dp.callback_query.register(start_bot_game_callback, lambda c: c.data in {"bot_easy", "bot_medium", "bot_hard"})
+    dp.callback_query.register(start_bot_game_callback, lambda c: c.data in {"bot_easy", "bot_medium", "bot_hard", "bot_super_hard"})

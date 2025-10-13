@@ -8,7 +8,6 @@ from app.db_utils.player import get_player_by_telegram_id, get_extended_stats
 from app.dependencies import db_session
 
 from app.messages.texts import (
-    STATS_HEADER,
     STATS_TEMPLATE,
     NO_STATS_MESSAGE,
     NOT_REGISTERED_MESSAGE,
@@ -49,8 +48,10 @@ async def stats_callback(callback: CallbackQuery) -> None:
             return
 
         logger.info(f"📊 Игрок @{username} получил свою статистику.")
+
         await callback.message.edit_text(
-            STATS_HEADER + STATS_TEMPLATE.format(
+            STATS_TEMPLATE.format(
+                donor='открыты' if stats.get("is_donor", False) else 'закрыты',
                 games_played=stats["games_played"],
                 wins=stats["wins"],
                 losses=stats["losses"],
@@ -58,7 +59,6 @@ async def stats_callback(callback: CallbackQuery) -> None:
                 place=stats["place"],
                 total_players=stats["total_players"],
                 first_seen=stats["first_seen"].strftime("%d.%m.%Y"),
-                # last_seen=stats["last_seen"].strftime("%d.%m.%Y"),
                 avg_time=int(stats["avg_time"] // 60),
                 total_time=int(stats["total_time"] // 60),
             ),
@@ -92,24 +92,30 @@ async def leaderboard_callback(callback: CallbackQuery) -> None:
             return
 
         text = LEADERBOARD_HEADER
-        for i, (player_username, rating, _) in enumerate(top_players, 1):
+        for i, (player_username, rating, _, is_donor) in enumerate(top_players, 1):
+            donor_badge = "💎" if is_donor else ""
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
-            text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
+            name_with_badge = f"{donor_badge} {name}".strip()
+            text += LEADERBOARD_ROW.format(index=i, username=name_with_badge, rating=rating)
 
         # Если пользователь не в топе, добавляем его позицию
         if current_user_position:
-            user_username, user_rating, user_position = current_user_position
+            user_username, user_rating, user_position, user_is_donor = current_user_position
+            donor_badge = "💎" if user_is_donor else ""
             name = f"@{user_username}" if user_username else UNKNOWN_USERNAME_FIRST
+            name_with_badge = f"{donor_badge} {name}".strip()
             text += "...\n"
-            text += LEADERBOARD_ROW.format(index=user_position, username=name, rating=user_rating)
+            text += LEADERBOARD_ROW.format(index=user_position, username=name_with_badge, rating=user_rating)
             text += "...\n"
         else:
             text += "...\n"
 
         start_index = total_players - len(bottom_players) + 1
-        for i, (player_username, rating, _) in enumerate(bottom_players, start_index):
+        for i, (player_username, rating, _, is_donor) in enumerate(bottom_players, start_index):
+            donor_badge = "💎" if is_donor else ""
             name = f"@{player_username}" if player_username else UNKNOWN_USERNAME_FIRST
-            text += LEADERBOARD_ROW.format(index=i, username=name, rating=rating)
+            name_with_badge = f"{donor_badge} {name}".strip()
+            text += LEADERBOARD_ROW.format(index=i, username=name_with_badge, rating=rating)
 
         # text += LEADERBOARD_FOOTER.format(total_players=total_players)
 

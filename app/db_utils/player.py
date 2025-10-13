@@ -5,6 +5,7 @@ from datetime import datetime
 from app.models.player import Player
 from app.models.player_stats import PlayerStats
 from app.models.match import Match
+from app.models.donor import Donor
 from app.db_utils.stats import get_stats, get_or_create_stats
 from app.config import MOSCOW_TZ
 
@@ -70,11 +71,16 @@ def get_extended_stats(db: Session, telegram_id: str) -> dict | None:
     - рейтинг и место в рейтинге
     - дата регистрации и последнего визита
     - среднее и суммарное время матчей
+    - статус донора
     """
     player = get_player_by_telegram_id(db, telegram_id)
     stats = get_stats(db, int(telegram_id))
     if not player or not stats:
         return None
+
+    # Проверяем статус донора
+    donor = db.query(Donor).filter(Donor.player_id == player.telegram_id).first()
+    is_donor = donor is not None and donor.is_donor
 
     higher_count = (
         db.query(func.count(PlayerStats.player_id))
@@ -111,4 +117,5 @@ def get_extended_stats(db: Session, telegram_id: str) -> dict | None:
         "last_seen": player.last_seen,
         "avg_time": avg_time,
         "total_time": total_time,
+        "is_donor": is_donor,
     }

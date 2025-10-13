@@ -59,6 +59,7 @@ async def bot_analytics_callback(callback: CallbackQuery) -> None:
     easy_g, easy_w, easy_l = diff("easy")
     med_g, med_w, med_l = diff("medium")
     hard_g, hard_w, hard_l = diff("hard")
+    super_hard_g, super_hard_w, super_hard_l = diff("super_hard")
 
     text = (
         BOT_ANALYTICS_TEMPLATE.format(
@@ -68,6 +69,7 @@ async def bot_analytics_callback(callback: CallbackQuery) -> None:
             easy_games=easy_g, easy_wins=easy_w, easy_losses=easy_l,
             medium_games=med_g, medium_wins=med_w, medium_losses=med_l,
             hard_games=hard_g, hard_wins=hard_w, hard_losses=hard_l,
+            super_hard_games=super_hard_g, super_hard_wins=super_hard_w, super_hard_losses=super_hard_l,
         )
     )
 

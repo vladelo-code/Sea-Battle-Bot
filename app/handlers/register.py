@@ -1,6 +1,6 @@
 from aiogram import Dispatcher
 
-from app.handlers import base, stats, game, matchmaking, records, broadcast, bot_game, bot_analytics, achievements
+from app.handlers import base, stats, game, matchmaking, records, broadcast, bot_game, bot_analytics, achievements, donation
 
 
 def register_handlers(dp: Dispatcher) -> None:
@@ -18,3 +18,4 @@ def register_handlers(dp: Dispatcher) -> None:
     bot_game.register_handler(dp)
     bot_analytics.register_handler(dp)
     achievements.register_handler(dp)
+    donation.register_handler(dp)

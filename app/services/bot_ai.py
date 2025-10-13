@@ -19,9 +19,14 @@ class BotAI:
     MEDIUM_RANDOM_PROBABILITY = 0.5  # 50% шанс на случайный выстрел
 
     # Вероятности для hard режима
-    CHEAT_PROBABILITY = 0.15  # 10% вероятность читерства
-    CHECKER_PROBABILITY = 0.45  # 50% вероятность шахматной схемы
+    CHEAT_PROBABILITY = 0.15  # 15% вероятность читерства
+    CHECKER_PROBABILITY = 0.45  # 45% вероятность шахматной схемы
     RANDOM_PROBABILITY = 0.4  # 40% вероятность случайного выбора
+
+    # Вероятности для super_hard режима
+    SUPER_HARD_CHEAT_PROBABILITY = 0.3  # 30% вероятность читерства
+    SUPER_HARD_CHECKER_PROBABILITY = 0.4  # 40% вероятность шахматной схемы
+    SUPER_HARD_RANDOM_PROBABILITY = 0.3  # 30% вероятность случайного выбора
 
     def __init__(self, difficulty: str, enemy_board: Optional[List[List[str]]] = None):
         self.difficulty = difficulty  # easy | medium | hard
@@ -40,8 +45,8 @@ class BotAI:
         ]
         random.shuffle(self.checker_cells)
 
-        # Для hard уровня - "знаем" позиции всех кораблей противника
-        if difficulty == "hard" and enemy_board is not None:
+        # Для hard и super_hard уровней - "знаем" позиции всех кораблей противника
+        if difficulty in ["hard", "super_hard"] and enemy_board is not None:
             self._extract_ship_positions(enemy_board)
 
     def reset_ship_hunt(self) -> None:
@@ -98,7 +103,11 @@ class BotAI:
         if self.difficulty == "hard":
             return self._choose_hard_strategy()
 
-        # 3. medium — 50 на 50: шахматные клетки или случайный выстрел
+        # 3. Для super_hard режима - продвинутая стратегия для доноров
+        if self.difficulty == "super_hard":
+            return self._choose_super_hard_strategy()
+
+        # 4. medium — 50 на 50: шахматные клетки или случайный выстрел
         if self.difficulty == "medium":
             if random.random() < self.MEDIUM_RANDOM_PROBABILITY:
                 return self._random_untried()
@@ -107,7 +116,7 @@ class BotAI:
             if coord is not None:
                 return coord
 
-        # 4. fallback — случайно
+        # 5. fallback — случайно
         return self._random_untried()
 
     def process_result(self, coord: Coordinate, hit: Optional[bool], ship_destroyed: bool) -> None:
@@ -187,6 +196,33 @@ class BotAI:
 
         # Рандом
         if random.random() < self.RANDOM_PROBABILITY:
+            random_coord = self._random_untried()
+            possible_coords.append(random_coord)
+
+        if possible_coords:
+            return random.choice(possible_coords)
+
+        # Fallback
+        return self._random_untried()
+
+    def _choose_super_hard_strategy(self) -> Coordinate:
+        """Выбирает стратегию для super_hard режима (только для доноров)"""
+        possible_coords: List[Coordinate] = []
+
+        # Повышенное читерство для доноров
+        if random.random() < self.SUPER_HARD_CHEAT_PROBABILITY:
+            cheat_coord = self._get_known_ship_position()
+            if cheat_coord is not None:
+                possible_coords.append(cheat_coord)
+
+        # Шахматная схема
+        if random.random() < self.SUPER_HARD_CHECKER_PROBABILITY:
+            checker_coord = self._random_checker_untried()
+            if checker_coord is not None:
+                possible_coords.append(checker_coord)
+
+        # Рандом
+        if random.random() < self.SUPER_HARD_RANDOM_PROBABILITY:
             random_coord = self._random_untried()
             possible_coords.append(random_coord)
 

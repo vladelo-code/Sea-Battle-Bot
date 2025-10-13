@@ -12,6 +12,7 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     - Рейтинг
     - Ачивки
     - Рекорды игры
+    – Поддержать проект
     - Сыграть в музыкальном боте
     - Рассылка (только для админа)
     
@@ -25,6 +26,7 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="🥇 Рейтинг", callback_data="rating")],
         [InlineKeyboardButton(text="🎖 Ачивки", callback_data="achievements_menu")],
         [InlineKeyboardButton(text="🏆 Рекорды игры", callback_data="show_records")],
+        [InlineKeyboardButton(text="💎 Поддержать проект", callback_data="donation_menu")],
         [InlineKeyboardButton(text="🎸 Сыграть в музыкального бота", url="https://t.me/song_sniper_bot")],
     ]
 
@@ -35,26 +37,36 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     return keyboard
 
 
-def bot_difficulty_menu() -> InlineKeyboardMarkup:
+def bot_difficulty_menu(is_donor: bool = False) -> InlineKeyboardMarkup:
     """
     Меню выбора сложности игры против бота:
     - Простой
     - Средний
     - Сложный
+    - Super-Hard (только для доноров)
     - Аналитика игр с ботом
     - Правила игры
     - В главное меню
     """
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🟢 Простой", callback_data="bot_easy")],
-            [InlineKeyboardButton(text="🟡 Средний", callback_data="bot_medium")],
-            [InlineKeyboardButton(text="🔴 Сложный", callback_data="bot_hard")],
-            [InlineKeyboardButton(text="📈 Аналитика игр с ботом", callback_data="bot_analytics")],
-            [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
-            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")],
-        ]
-    )
+    keyboard_buttons = [
+        [InlineKeyboardButton(text="🟢 Простой", callback_data="bot_easy")],
+        [InlineKeyboardButton(text="🟡 Средний", callback_data="bot_medium")],
+        [InlineKeyboardButton(text="🔴 Сложный", callback_data="bot_hard")],
+    ]
+
+    # Добавляем Super-Hard только для доноров
+    if is_donor:
+        keyboard_buttons.append([InlineKeyboardButton(text="🔥 Супер-сложный", callback_data="bot_super_hard")])
+    else:
+        keyboard_buttons.append([InlineKeyboardButton(text="🔥 Супер-сложный", callback_data="donation_menu")])
+
+    keyboard_buttons.extend([
+        [InlineKeyboardButton(text="📈 Аналитика игр с ботом", callback_data="bot_analytics")],
+        [InlineKeyboardButton(text="🚓 Правила игры", callback_data="show_rules")],
+        [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")],
+    ])
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
     return keyboard
 
 
@@ -299,6 +311,35 @@ def broadcast_confirm_menu() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="📢 Отправить всем", callback_data="send_broadcast")],
             [InlineKeyboardButton(text="❌ Отменить", callback_data="cancel_broadcast")],
             [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
+        ]
+    )
+    return keyboard
+
+
+def donation_menu() -> InlineKeyboardMarkup:
+    """
+    Создает inline-клавиатуру меню доната:
+    - Поддержать 50 звёзд
+    - Главное меню
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🌟 Поддержать за 50 звёзд", callback_data="donate_50_stars")],
+            [InlineKeyboardButton(text="🏠 В главное меню", callback_data="main_menu")]
+        ]
+    )
+    return keyboard
+
+
+def donation_cancel_keyboard(invoice_message) -> InlineKeyboardMarkup:
+    """
+    Создает inline-клавиатуру меню доната:
+    - Поддержать 50 звёзд
+    - Главное меню
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Отмена", callback_data=f"cancel_invoice_{invoice_message.message_id}")]
         ]
     )
     return keyboard

@@ -13,7 +13,7 @@ def get_or_create_bot_stats(db: Session, player_id: int, difficulty: str) -> Bot
     Args:
         db (Session): SQLAlchemy сессия базы данных.
         player_id (int): ID игрока.
-        difficulty (str): Уровень сложности ("easy", "medium", "hard").
+        difficulty (str): Уровень сложности ("easy", "medium", "hard", "super_hard").
 
     Returns:
         BotGameStats: объект статистики для указанного игрока и уровня сложности.
@@ -73,7 +73,8 @@ def get_aggregated_bot_stats(db: Session, player_id: int) -> dict:
                 "by_difficulty": {
                     "easy": {"games": int, "wins": int, "losses": int, "last_played_at": datetime},
                     "medium": {...},
-                    "hard": {...}
+                    "hard": {...},
+                    "super_hard": {...}
                 }
             }
     """
