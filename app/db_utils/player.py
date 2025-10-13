@@ -32,7 +32,8 @@ def get_or_create_player(db: Session, telegram_id: str, username: str | None = N
     if player:
         # Обновляем дату последнего появления и, при необходимости, username
         player.last_seen = datetime.now(MOSCOW_TZ)
-        if player.username != username:
+
+        if not username and player.username != username:
             player.username = username
     else:
         player = Player(
