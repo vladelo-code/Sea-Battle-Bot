@@ -1,3 +1,4 @@
+from datetime import datetime
 from aiogram import Dispatcher
 from aiogram.types import CallbackQuery, PreCheckoutQuery, Message, LabeledPrice
 
@@ -7,6 +8,7 @@ from app.db_utils.player import get_or_create_player
 from app.db_utils.donor import is_donor, handle_donation
 from app.messages.texts import (DONATION_MENU, DONATION_MENU_ALREADY_DONOR,
                                 DONATION_SUCCESS, DONATION_ERROR, PROCESS_PAYMENT, DONATION_CANCELLED)
+from app.config import MOSCOW_TZ
 from app.logger import setup_logger
 
 logger = setup_logger("donation")
@@ -53,11 +55,11 @@ async def donate_50_stars_callback(callback: CallbackQuery) -> None:
             chat_id=callback.from_user.id,
             title="💎 Поддержка проекта «Морской бой»",
             description="Поддержите развитие бота и получите эксклюзивные привилегии!",
-            payload="donation_1_star",
+            payload="donation_50_stars",
             provider_token="",
             currency="XTR",
-            prices=[LabeledPrice(label="Тестовый донат", amount=1)],
-            start_parameter="donation_1_star",
+            prices=[LabeledPrice(label="Поддержка проекта", amount=50)],
+            start_parameter="donation_50_stars",
         )
 
         await callback.bot.send_message(
@@ -109,7 +111,7 @@ async def pre_checkout_query_handler(pre_checkout_query: PreCheckoutQuery) -> No
     """
     try:
         # Проверяем, что это наш платеж
-        if pre_checkout_query.invoice_payload == "donation_1_stars":
+        if pre_checkout_query.invoice_payload == "donation_50_stars":
             await pre_checkout_query.bot.answer_pre_checkout_query(
                 pre_checkout_query.id,
                 ok=True
@@ -142,7 +144,7 @@ async def successful_payment_handler(message: Message) -> None:
 
         with db_session() as db:
             player = get_or_create_player(db, str(message.from_user.id), message.from_user.username)
-            handle_donation(db, player, stars_amount, message.successful_payment.date)
+            handle_donation(db, player, stars_amount, datetime.now(MOSCOW_TZ))
 
         await message.answer(DONATION_SUCCESS, parse_mode="HTML", reply_markup=back_to_main_menu())
         logger.info(f"Пользователь {message.from_user.username} стал донором ({stars_amount} ⭐)")
