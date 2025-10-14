@@ -1,16 +1,19 @@
 import logging
 from pathlib import Path
+from datetime import datetime
+
+from app.config import MOSCOW_TZ
+
+
+def moscow_time(*args):
+    return datetime.now(MOSCOW_TZ).timetuple()
 
 
 def setup_logger(name: str, log_file: str = "bot.log") -> logging.Logger:
     """
-    Создает и настраивает логгер с заданным именем.
+    Создает и настраивает логгер с часовым поясом МСК.
     Логгер выводит сообщения в консоль и записывает их в файл с форматом:
     [ГГГГ-ММ-ДД ЧЧ:ММ:СС] сообщение
-
-    :param name: Имя логгера.
-    :param log_file: Путь к файлу для логов (по умолчанию "bot.log").
-    :return: Настроенный экземпляр logging.
     """
     logger = logging.getLogger(name)
 
@@ -19,6 +22,8 @@ def setup_logger(name: str, log_file: str = "bot.log") -> logging.Logger:
             '[%(asctime)s] %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
+
+        formatter.converter = moscow_time
 
         # Консольный обработчик
         console_handler = logging.StreamHandler()
