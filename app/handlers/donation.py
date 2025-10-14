@@ -27,6 +27,7 @@ async def donation_menu_callback(callback: CallbackQuery) -> None:
     text = DONATION_MENU_ALREADY_DONOR if donor_status else DONATION_MENU
 
     try:
+        await callback.answer()
         await callback.message.edit_text(
             text,
             parse_mode="HTML",
