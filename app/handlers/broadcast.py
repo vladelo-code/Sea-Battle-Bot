@@ -258,7 +258,7 @@ async def check_logs_callback(callback: CallbackQuery) -> None:
     :param callback: Объект callback-запроса от пользователя.
     """
     if not await is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой функции!", show_alert=True)
+        await callback.answer("❌ У Вас нет прав для доступа к этой функции!", show_alert=True)
         return
 
     log_path = "bot.log"
@@ -284,6 +284,39 @@ async def check_logs_callback(callback: CallbackQuery) -> None:
         await callback.message.answer(f"❌ Не удалось отправить файл логов: {e}")
 
 
+async def check_db_callback(callback: CallbackQuery) -> None:
+    """
+    Отправляет администратору файл базы данных db.sqlite3.
+
+    :param callback: Объект callback-запроса от пользователя.
+    """
+    if not await is_admin(callback.from_user.id):
+        await callback.answer("❌ У Вас нет прав для доступа к этой функции!", show_alert=True)
+        return
+
+    db_path = "db.sqlite3"
+
+    if not os.path.exists(db_path):
+        await callback.answer("⚠️ Файл БД не найден!", show_alert=True)
+        return
+
+    try:
+        await callback.answer()
+
+        db_file = FSInputFile(db_path)
+        now_moscow = datetime.now(MOSCOW_TZ).strftime("%d.%m.%Y, %H:%M")
+
+        await callback.message.answer_document(
+            document=db_file,
+            caption=f"📜 Актуальная БД бота (на {now_moscow})"
+        )
+        logger.info(f"📤 Админ @{callback.from_user.username} получил файл БД")
+
+    except Exception as e:
+        logger.error(f"Ошибка при отправке БД: {e}")
+        await callback.message.answer(f"❌ Не удалось отправить файл БД: {e}")
+
+
 def register_handler(dp: Dispatcher) -> None:
     """
     Регистрирует обработчики для рассылки.
@@ -293,6 +326,7 @@ def register_handler(dp: Dispatcher) -> None:
     # Callback-обработчики
     dp.callback_query.register(broadcast_menu_callback, lambda c: c.data == "broadcast_menu")
     dp.callback_query.register(check_logs_callback, lambda c: c.data == "check_logs")
+    dp.callback_query.register(check_db_callback, lambda c: c.data == "check_db")
     dp.callback_query.register(new_message_callback, lambda c: c.data == "new_broadcast_message")
     dp.callback_query.register(send_broadcast_callback, lambda c: c.data == "send_broadcast")
     dp.callback_query.register(cancel_broadcast_callback, lambda c: c.data == "cancel_broadcast")

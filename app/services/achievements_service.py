@@ -48,7 +48,7 @@ def evaluate_achievements_after_bot_game(db: Session, player_id: int) -> None:
     easy, medium, hard, super_hard = stats.get("easy"), stats.get("medium"), stats.get("hard"), stats.get("super_hard")
 
     # 1) full_captain_course — сыграй хотя бы 1 матч на каждом уровне с ботом
-    if easy and medium and hard and all(s.games_played > 0 for s in [easy, medium, hard]):
+    if easy and medium and hard and super_hard and all(s.games_played > 0 for s in [easy, medium, hard, super_hard]):
         _unlock_by_code(db, player_id, achievements_by_code, "full_captain_course")
 
     # 2) fleet_marathon — суммарно 50 матчей с ботом
@@ -185,10 +185,10 @@ def get_player_achievements(db: Session, player_id: int) -> list[dict]:
     achievements = db.query(Achievement).all()
     links = db.query(PlayerAchievement).filter(PlayerAchievement.player_id == player_id).all()
     by_id = {l.achievement_id: l for l in links}
-    
+
     # Получаем проценты для всех ачивок
     percentages = get_achievement_percentages(db)
-    
+
     result: list[dict] = []
     for a in achievements:
         link = by_id.get(a.id)
