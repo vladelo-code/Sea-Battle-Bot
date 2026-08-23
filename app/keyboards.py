@@ -13,7 +13,6 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     - Ачивки
     - Рекорды игры
     – Поддержать проект
-    - Сыграть в музыкальном боте
     - Рассылка (только для админа)
     
     :param is_admin: Показывать ли кнопку рассылки для администратора
@@ -27,7 +26,6 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="🎖 Ачивки", callback_data="achievements_menu")],
         [InlineKeyboardButton(text="🏆 Рекорды игры", callback_data="show_records")],
         [InlineKeyboardButton(text="💎 Поддержать проект", callback_data="donation_menu")],
-        [InlineKeyboardButton(text="🎸 Сыграть в музыкального бота", url="https://t.me/song_sniper_bot")],
     ]
 
     if is_admin:
@@ -73,7 +71,6 @@ def bot_difficulty_menu(is_donor: bool = False) -> InlineKeyboardMarkup:
 def after_game_menu() -> InlineKeyboardMarkup:
     """
     Создает inline-клавиатуру после-игрового меню с основными командами:
-    - Сыграть в музыкальном боте
     - Новая игра с другом
     - Присоединиться к игре
     - Новая игра с ботом
@@ -81,7 +78,6 @@ def after_game_menu() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🎸 Сыграть в музыкального бота", url="https://t.me/song_sniper_bot")],
             [InlineKeyboardButton(text="🚀 Новая игра с другом", callback_data="new_game")],
             [InlineKeyboardButton(text="📎 Присоединиться к игре", callback_data="join_game")],
             [InlineKeyboardButton(text="🤖 Новая игра с ботом", callback_data="play_vs_bot")],
